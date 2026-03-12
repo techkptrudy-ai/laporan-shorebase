@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASDP Shorebase Cloud v16.1</title>
+    <title>ASDP Shorebase v16.2 - Optimized</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -26,7 +26,7 @@
         .btn-wa { background: #25d366; }
 
         #preview-container { margin-top: 10px; display: none; text-align: center; border: 2px dashed #ddd; border-radius: 10px; padding: 10px; }
-        #preview-img { width: 100%; max-width: 200px; border-radius: 8px; }
+        #preview-img { width: 100%; max-width: 150px; border-radius: 8px; }
 
         .recent-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.75rem; }
         .recent-table td { padding: 12px 8px; border-bottom: 1px solid #eee; }
@@ -35,7 +35,7 @@
         
         #loading { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; text-align: center; }
         .footer { text-align: center; color: #bbb; font-size: 10px; margin: 30px 0; }
-        .action-btns i { cursor: pointer; font-size: 1.1rem; margin-left: 10px; }
+        .action-btns i { cursor: pointer; font-size: 1.1rem; margin-left: 15px; }
     </style>
 </head>
 <body>
@@ -47,7 +47,7 @@
 
 <div class="navbar">
     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/ASDP_Indonesia_Ferry_logo.svg/512px-ASDP_Indonesia_Ferry_logo.svg.png" height="30">
-    <b style="color:var(--asdp-blue); font-size: 14px;">Shorebase Cloud</b>
+    <b style="color:var(--asdp-blue); font-size: 14px;">Shorebase Cloud v16.2</b>
 </div>
 
 <div class="container">
@@ -62,43 +62,46 @@
         <select id="stat">
             <option value="Selesai">Selesai</option><option value="Lanjut">Lanjut</option><option value="Pending">Pending</option>
         </select>
-        <textarea id="akt" rows="3" placeholder="Uraian pekerjaan..."></textarea>
+        <textarea id="akt" rows="3" placeholder="Uraian pekerjaan teknis..."></textarea>
         
-        <label>Foto Lampiran</label>
+        <label>Foto (Akan dikompres otomatis)</label>
         <input type="file" id="foto" accept="image/*" onchange="compressImage(this)">
         <div id="preview-container">
             <img id="preview-img">
+            <p style="font-size: 9px; color: #27ae60;">Foto Siap (Ukuran diperkecil)</p>
         </div>
         
-        <button id="btnSave" class="btn btn-save" onclick="saveData()"><i class="fas fa-cloud-upload-alt"></i> SIMPAN KE CLOUD</button>
-        <button id="btnUpdate" class="btn btn-update" onclick="updateData()"><i class="fas fa-check"></i> SIMPAN PERUBAHAN EDIT</button>
+        <button id="btnSave" class="btn btn-save" onclick="saveData()"><i class="fas fa-cloud-upload-alt"></i> SIMPAN & KIRIM CLOUD</button>
+        <button id="btnUpdate" class="btn btn-update" onclick="updateData()"><i class="fas fa-check"></i> SIMPAN PERUBAHAN</button>
     </div>
 
     <div class="card">
-        <h2><i class="fas fa-file-export"></i> Output</h2>
+        <h2><i class="fas fa-file-export"></i> Cetak Laporan</h2>
         <button class="btn btn-pdf" onclick="exportPDF()"><i class="fas fa-file-pdf"></i> DOWNLOAD PDF (A4)</button>
-        <button class="btn btn-wa" onclick="kirimWA()"><i class="fab fa-whatsapp"></i> SHARE KE WHATSAPP</button>
+        <button class="btn btn-wa" onclick="kirimWA()"><i class="fab fa-whatsapp"></i> BAGIKAN KE WA</button>
     </div>
 
     <div class="card">
-        <h2><i class="fas fa-history"></i> Riwayat Tersimpan</h2>
+        <h2><i class="fas fa-history"></i> Riwayat di HP</h2>
         <table class="recent-table" id="historyTable"></table>
+        <p onclick="hapusSemua()" style="color:#ddd; font-size:9px; text-align:center; margin-top:20px; cursor:pointer;">[ Hapus Semua Riwayat Lokal ]</p>
     </div>
 
     <div class="footer">Teknisi: Syahrudi | Manager: Dedi Siswanto</div>
 </div>
 
 <script>
-    // GANTI LINK DI BAWAH INI DENGAN LINK GOOGLE APPS SCRIPT BAPAK
+    // PENTING: Masukkan URL Google Apps Script Bapak di sini agar tersimpan ke Google Sheets
     const WEB_APP_URL = "MASUKKAN_URL_WEB_APP_BAPAK_DISINI"; 
 
-    let db = JSON.parse(localStorage.getItem('asdp_v16_1')) || [];
+    let db = JSON.parse(localStorage.getItem('asdp_v16_final')) || [];
     let imgBase64 = "";
     let editIndex = -1;
 
     document.getElementById('tgl').valueAsDate = new Date();
     updateTampilan();
 
+    // FUNGSI KOMPRESI GAMBAR (DIPERTINGAN)
     function compressImage(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
@@ -108,12 +111,14 @@
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    const maxW = 400; 
+                    // Perkecil resolusi foto agar PDF tidak macet
+                    const maxW = 300; 
                     const scale = maxW / img.width;
                     canvas.width = maxW;
                     canvas.height = img.height * scale;
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    imgBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                    // Kualitas 0.5 (50%) sudah cukup untuk laporan PDF
+                    imgBase64 = canvas.toDataURL('image/jpeg', 0.5);
                     document.getElementById('preview-img').src = imgBase64;
                     document.getElementById('preview-container').style.display = "block";
                 };
@@ -132,7 +137,7 @@
             foto: imgBase64
         };
         db.push(data);
-        await finishProcess(data, "Data Berhasil Disimpan ke Cloud!");
+        await finishAction(data, "Data Berhasil Disimpan!");
     }
 
     function editData(idx) {
@@ -149,7 +154,6 @@
         }
         document.getElementById('btnSave').style.display = "none";
         document.getElementById('btnUpdate').style.display = "flex";
-        document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit"></i> Edit Laporan...';
         window.scrollTo({top:0, behavior:'smooth'});
     }
 
@@ -162,24 +166,22 @@
             foto: imgBase64
         };
         db[editIndex] = data;
-        await finishProcess(data, "Perubahan Berhasil Diperbarui!");
+        await finishAction(data, "Perubahan Disimpan!");
     }
 
-    async function finishProcess(data, msg) {
-        localStorage.setItem('asdp_v16_1', JSON.stringify(db));
+    async function finishAction(data, msg) {
+        localStorage.setItem('asdp_v16_final', JSON.stringify(db));
         document.getElementById('loading').style.display = "flex";
-        document.getElementById('loadText').innerText = "Mengirim ke Google Sheets...";
+        document.getElementById('loadText').innerText = "Sinkronisasi Cloud...";
         
         try {
             if(WEB_APP_URL.includes("https")) {
                 await fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(data) });
             }
-            alert(msg);
-            location.reload();
-        } catch (e) {
-            alert("Gagal sinkron Cloud, tapi data aman di HP Bapak.");
-            location.reload();
-        }
+        } catch (e) { console.log("Cloud Error"); }
+
+        alert(msg);
+        location.reload();
     }
 
     function updateTampilan() {
@@ -198,52 +200,63 @@
         });
     }
 
-    function exportPDF() {
+    // FUNGSI PDF OPTIMIZED (ANTI MACET)
+    async function exportPDF() {
         if(db.length === 0) return alert("Data kosong.");
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
+        document.getElementById('loading').style.display = "flex";
+        document.getElementById('loadText').innerText = "Menyusun PDF (Mohon Tunggu)...";
 
-        // Deteksi Bulan Otomatis
-        const bln = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-        let dates = db.map(x => new Date(x.tgl));
-        let minDate = new Date(Math.min(...dates));
-        let maxDate = new Date(Math.max(...dates));
-        let periode = bln[minDate.getMonth()] === bln[maxDate.getMonth()] ? 
-                      `${bln[minDate.getMonth()]} ${minDate.getFullYear()}` :
-                      `${bln[minDate.getMonth()]} - ${bln[maxDate.getMonth()]} ${minDate.getFullYear()}`;
+        setTimeout(() => {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
 
-        doc.setFontSize(14); doc.setTextColor(0, 84, 166); doc.setFont(undefined, 'bold');
-        doc.text("PT. ASDP INDONESIA FERRY (PERSERO)", 14, 15);
-        doc.setFontSize(10); doc.setTextColor(100); doc.text("SHOREBASE DAILY REPORT", 14, 21);
-        doc.setFontSize(9); doc.setTextColor(242, 101, 34); doc.text("PERIODE: " + periode.toUpperCase(), 14, 26);
-        doc.line(14, 28, 196, 28);
+                // Deteksi Periode
+                const bln = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                let tgls = db.map(d => new Date(d.tgl));
+                let minD = new Date(Math.min(...tgls));
+                let periode = bln[minD.getMonth()] + " " + minD.getFullYear();
 
-        const rows = db.map((d, i) => [i + 1, d.tgl, d.lok, d.akt, d.stat, ""]);
-        doc.autoTable({
-            startY: 32,
-            head: [['No', 'Tanggal', 'Lokasi', 'Uraian', 'Status', 'Foto']],
-            body: rows,
-            headStyles: { fillColor: [0, 84, 166] },
-            styles: { fontSize: 7, valign: 'middle' },
-            columnStyles: { 5: { cellWidth: 35, minCellHeight: 28 } },
-            didDrawCell: function(data) {
-                if (data.column.index === 5 && data.cell.section === 'body') {
-                    const img = db[data.row.index].foto;
-                    if (img && img.length > 500) {
-                        try { doc.addImage(img, 'JPEG', data.cell.x + 2, data.cell.y + 2, 31, 24); } catch (e) {}
+                // Header
+                doc.setFontSize(14); doc.setTextColor(0, 84, 166); doc.setFont(undefined, 'bold');
+                doc.text("PT. ASDP INDONESIA FERRY (PERSERO)", 14, 15);
+                doc.setFontSize(10); doc.setTextColor(100); doc.text("SHOREBASE DAILY REPORT", 14, 21);
+                doc.setFontSize(9); doc.setTextColor(242, 101, 34); doc.text("PERIODE: " + periode.toUpperCase(), 14, 26);
+                doc.line(14, 28, 196, 28);
+
+                const body = db.map((d, i) => [i + 1, d.tgl, d.lok, d.akt, d.stat, ""]);
+                doc.autoTable({
+                    startY: 32,
+                    head: [['No', 'Tgl', 'Lokasi', 'Uraian Pekerjaan', 'Status', 'Foto']],
+                    body: body,
+                    headStyles: { fillColor: [0, 84, 166] },
+                    styles: { fontSize: 7, valign: 'middle', overflow: 'linebreak' },
+                    columnStyles: { 3: { cellWidth: 60 }, 5: { cellWidth: 35, minCellHeight: 25 } },
+                    didDrawCell: function(data) {
+                        if (data.column.index === 5 && data.cell.section === 'body') {
+                            const img = db[data.row.index].foto;
+                            if (img && img.length > 500) {
+                                try { doc.addImage(img, 'JPEG', data.cell.x + 2, data.cell.y + 2, 31, 21); } catch (e) {}
+                            }
+                        }
                     }
-                }
+                });
+
+                let finalY = doc.lastAutoTable.finalY + 15;
+                if (finalY > 260) { doc.addPage(); finalY = 20; }
+                doc.setFontSize(9); doc.setTextColor(0);
+                doc.text("Dibuat Oleh,", 30, finalY);
+                doc.setFont(undefined, 'bold'); doc.text("SYAHRUDI", 30, finalY + 20);
+                doc.setFont(undefined, 'normal'); doc.text("Disetujui Oleh,", 140, finalY);
+                doc.setFont(undefined, 'bold'); doc.text("DEDI SISWANTO", 140, finalY + 20);
+
+                doc.save(`Laporan_Shorebase_${periode.replace(' ','_')}.pdf`);
+            } catch (err) {
+                alert("Gagal membuat PDF. Coba kurangi jumlah foto.");
+            } finally {
+                document.getElementById('loading').style.display = "none";
             }
-        });
-
-        let y = doc.lastAutoTable.finalY + 20;
-        doc.setFontSize(9); doc.setTextColor(0);
-        doc.text("Dibuat Oleh,", 30, y);
-        doc.setFont(undefined, 'bold'); doc.text("SYAHRUDI", 30, y + 20);
-        doc.setFont(undefined, 'normal'); doc.text("Disetujui Oleh,", 140, y);
-        doc.setFont(undefined, 'bold'); doc.text("DEDI SISWANTO", 140, y + 20);
-
-        doc.save(`Laporan_Shorebase_${periode.replace(' ','_')}.pdf`);
+        }, 800);
     }
 
     function kirimWA() {
@@ -252,7 +265,8 @@
         window.open("https://wa.me/?text=" + encodeURIComponent(p), '_blank');
     }
 
-    function hapusSatu(idx) { if(confirm("Hapus baris ini?")) { db.splice(idx,1); localStorage.setItem('asdp_v16_1', JSON.stringify(db)); location.reload(); } }
+    function hapusSatu(idx) { if(confirm("Hapus baris ini?")) { db.splice(idx,1); localStorage.setItem('asdp_v16_final', JSON.stringify(db)); location.reload(); } }
+    function hapusSemua() { if(confirm("Hapus seluruh riwayat lokal?")) { localStorage.clear(); location.reload(); } }
 </script>
 </body>
 </html>
