@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASDP Shorebase Cloud v16</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root { --asdp-blue: #0054a6; --asdp-orange: #f26522; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f4f8; color: #333; }
+        .navbar { background: white; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid var(--asdp-blue); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .container { padding: 15px; max-width: 600px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h2 { margin-top: 0; color: var(--asdp-blue); font-size: 1rem; border-left: 4px solid var(--asdp-orange); padding-left: 10px; text-transform: uppercase; }
+        label { display: block; margin-top: 12px; font-weight: bold; font-size: 0.8rem; color: #666; }
+        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 10px; font-size: 15px; box-sizing: border-box; }
+        
+        .btn { padding: 15px; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; color: white; transition: 0.3s; }
+        .btn-save { background: var(--asdp-blue); }
+        .btn-update { background: #27ae60; display: none; }
+        .btn-pdf { background: var(--asdp-orange); }
+        .btn-wa { background: #25d366; }
+
+        #preview-container { margin-top: 10px; display: none; text-align: center; border: 2px dashed #ddd; border-radius: 10px; padding: 10px; }
+        #preview-img { width: 100%; max-width: 200px; border-radius: 8px; }
+
+        .recent-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.75rem; }
+        .recent-table td { padding: 12px 8px; border-bottom: 1px solid #eee; }
+        .status-pill { padding: 3px 6px; border-radius: 4px; color: white; font-size: 9px; font-weight: bold; }
+        .selesai { background: #28a745; } .lanjut { background: #fd7e14; } .pending { background: #dc3545; }
+        
+        #loading { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; text-align: center; }
+        .error-badge { color: red; font-size: 9px; font-weight: bold; display: block; }
+        .footer { text-align: center; color: #bbb; font-size: 10px; margin: 30px 0; }
+    </style>
+</head>
+<body>
+
+<div id="loading">
+    <i class="fas fa-cloud-upload-alt fa-spin fa-3x" style="color: var(--asdp-blue);"></i>
+    <p style="margin-top:15px; font-weight:bold;">Sinkronisasi Cloud...</p>
+</div>
+
+<div class="navbar">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/ASDP_Indonesia_Ferry_logo.svg/512px-ASDP_Indonesia_Ferry_logo.svg.png" height="30">
+    <div style="text-align: right; line-height: 1;">
+        <b style="color:var(--asdp-blue); font-size: 14px;">Shorebase</b><br>
+        <small style="color:var(--asdp-orange); font-size: 9px;">GitHub Online Mode</small>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card">
+        <h2 id="formTitle"><i class="fas fa-edit"></i> Input Laporan Harian</h2>
+        <input type="date" id="tgl">
+        <select id="lok">
+            <option>KMP.Batumandi</option><option>KMP.Sebuku</option><option>KMP.Legundi</option>
+            <option>KMP.Jatra 3</option><option>KMP.Portlink</option><option>KMP.Portlink 3</option>
+            <option>KMP.Portlink 5</option><option>Workshop</option><option>Dinas Luar</option>
+        </select>
+        <select id="stat">
+            <option value="Selesai">Selesai</option><option value="Lanjut">Lanjut</option><option value="Pending">Pending</option>
+        </select>
+        <textarea id="akt" rows="3" placeholder="Uraian perbaikan teknis..."></textarea>
+        
+        <label>Lampiran Foto</label>
+        <input type="file" id="foto" accept="image/*" onchange="compressImage(this)">
+        <div id="preview-container">
+            <img id="preview-img">
+            <p style="font-size: 10px; color: #27ae60;">✓ Foto Tervalidasi</p>
+        </div>
+        
+        <button id="btnSave" class="btn btn-save" onclick="saveData()"><i class="fas fa-cloud-upload-alt"></i> SIMPAN KE CLOUD</button>
+        <button id="btnUpdate" class="btn btn-update" onclick="updateData()"><i class="fas fa-check"></i> UPDATE PERUBAHAN</button>
+    </div>
+
+    <div class="card">
+        <h2><i class="fas fa-file-export"></i> Cetak & Bagikan</h2>
+        <button class="btn btn-pdf" onclick="exportPDF()"><i class="fas fa-file-pdf"></i> DOWNLOAD LAPORAN (PDF)</button>
+        <button class="btn btn-wa" onclick="kirimWA()"><i class="fab fa-whatsapp"></i> KIRIM RINGKASAN WA</button>
+    </div>
+
+    <div class="card">
+        <h2><i class="fas fa-history"></i> Riwayat Laporan</h2>
+        <table class="recent-table" id="historyTable"></table>
+        <p onclick="hapusSemua()" style="color:#ddd; font-size:9px; text-align:center; margin-top:20px; cursor:pointer;">[ Format Database Lokal ]</p>
+    </div>
+
+    <div class="footer">Teknisi: Syahrudi | Manager: Dedi Siswanto</div>
+</div>
+
+<script>
+    // MASUKKAN URL GOOGLE APPS SCRIPT BAPAK DI SINI
+    const WEB_APP_URL = "MASUKKAN_URL_WEB_APP_BAPAK_DISINI"; 
+
+    let db = JSON.parse(localStorage.getItem('asdp_v16_final')) || [];
+    let imgBase64 = "";
+    let editIndex = -1;
+
+    document.getElementById('tgl').valueAsDate = new Date();
+    updateTampilan();
+
+    function compressImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const targetW = 350; 
+                    const scale = targetW / img.width;
+                    canvas.width = targetW;
+                    canvas.height = img.height * scale;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    imgBase64 = canvas.toDataURL('image/jpeg', 0.5);
+                    document.getElementById('preview-img').src = imgBase64;
+                    document.getElementById('preview-container').style.display = "block";
+                };
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    async function saveData() {
+        if(!document.getElementById('akt').value) return alert("Uraian wajib diisi!");
+        
+        const data = {
+            tgl: document.getElementById('tgl').value,
+            lok: document.getElementById('lok').value,
+            akt: document.getElementById('akt').value,
+            stat: document.getElementById('stat').value,
+            foto: imgBase64
+        };
+
+        db.push(data);
+        saveAndSync(data, "Data Berhasil Disimpan & Dikirim!");
+    }
+
+    function editData(idx) {
+        editIndex = idx;
+        const item = db[idx];
+        document.getElementById('tgl').value = item.tgl;
+        document.getElementById('lok').value = item.lok;
+        document.getElementById('akt').value = item.akt;
+        document.getElementById('stat').value = item.stat;
+        imgBase64 = item.foto;
+        
+        if(imgBase64) {
+            document.getElementById('preview-img').src = imgBase64;
+            document.getElementById('preview-container').style.display = "block";
+        }
+        document.getElementById('btnSave').style.display = "none";
+        document.getElementById('btnUpdate').style.display = "flex";
+        document.getElementById('formTitle').innerText = "📍 Sedang Mengedit Data";
+        window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    function updateData() {
+        const data = {
+            tgl: document.getElementById('tgl').value,
+            lok: document.getElementById('lok').value,
+            akt: document.getElementById('akt').value,
+            stat: document.getElementById('stat').value,
+            foto: imgBase64
+        };
+        db[editIndex] = data;
+        saveAndSync(data, "Perubahan Berhasil Diperbarui!");
+    }
+
+    async function saveAndSync(data, msg) {
+        localStorage.setItem('asdp_v16_final', JSON.stringify(db));
+        
+        // Kirim ke Google Sheets (Async)
+        if(WEB_APP_URL !== "MASUKKAN_URL_WEB_APP_BAPAK_DISINI") {
+            document.getElementById('loading').style.display = "flex";
+            try {
+                await fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(data) });
+            } catch (e) { console.log("Cloud sync failed, kept local."); }
+        }
+
+        alert(msg);
+        location.reload();
+    }
+
+    function updateTampilan() {
+        const table = document.getElementById('historyTable');
+        table.innerHTML = "";
+        db.slice().reverse().forEach((d, i) => {
+            const realIdx = db.length - 1 - i;
+            const isCorrupt = (!d.foto || d.foto.length < 500);
+            table.innerHTML += `<tr>
+                <td><b>${d.lok}</b><br><small>${d.tgl}</small></td>
+                <td style="text-align:right">
+                    <span class="status-pill ${d.stat.toLowerCase()}">${d.stat}</span>
+                    ${isCorrupt ? '<span class="error-badge">⚠️ Foto Kosong</span>' : ''}
+                    <div style="margin-top:5px">
+                        <i class="fas fa-edit" style="color:var(--asdp-blue); margin-right:15px" onclick="editData(${realIdx})"></i>
+                        <i class="fas fa-trash-alt" style="color:#ddd" onclick="hapusSatu(${realIdx})"></i>
+                    </div>
+                </td>
+            </tr>`;
+        });
+    }
+
+    async function exportPDF() {
+        if(db.length === 0) return alert("Tidak ada data untuk dicetak.");
+        document.getElementById('loading').style.display = "flex";
+        
+        setTimeout(() => {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+
+                // AUTO PERIODE
+                const blnIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                let blns = db.map(d => new Date(d.tgl).getMonth());
+                let thns = db.map(d => new Date(d.tgl).getFullYear());
+                let pText = "PERIODE: " + blnIndo[Math.min(...blns)] + " " + thns[0];
+
+                doc.setFontSize(14); doc.setTextColor(0, 84, 166); doc.setFont(undefined, 'bold');
+                doc.text("PT. ASDP INDONESIA FERRY (PERSERO)", 14, 15);
+                doc.setFontSize(10); doc.setTextColor(100); doc.text("SHOREBASE DAILY REPORT", 14, 21);
+                doc.setFontSize(9); doc.setTextColor(242, 101, 34); doc.text(pText.toUpperCase(), 14, 26);
+                doc.line(14, 28, 196, 28);
+
+                const tableData = db.map((d, i) => [i + 1, d.tgl, d.lok, d.akt, d.stat, ""]);
+                doc.autoTable({
+                    startY: 32,
+                    head: [['No', 'Tanggal', 'Lokasi', 'Pekerjaan', 'Status', 'Foto']],
+                    body: tableData,
+                    headStyles: { fillColor: [0, 84, 166] },
+                    styles: { fontSize: 7, valign: 'middle' },
+                    columnStyles: { 5: { cellWidth: 35, minCellHeight: 28 } },
+                    didDrawCell: function(data) {
+                        if (data.column.index === 5 && data.cell.section === 'body') {
+                            const img = db[data.row.index].foto;
+                            if (img && img.length > 500) {
+                                try { doc.addImage(img, 'JPEG', data.cell.x + 2, data.cell.y + 2, 31, 24); } catch (e) {}
+                            }
+                        }
+                    }
+                });
+
+                let y = doc.lastAutoTable.finalY + 20;
+                if(y > 250) { doc.addPage(); y = 20; }
+                doc.setFontSize(9); doc.setTextColor(0);
+                doc.text("Dibuat Oleh,", 30, y);
+                doc.setFont(undefined, 'bold'); doc.text("SYAHRUDI", 30, y + 20);
+                doc.setFont(undefined, 'normal'); doc.text("Disetujui Oleh,", 140, y);
+                doc.setFont(undefined, 'bold'); doc.text("DEDI SISWANTO", 140, y + 20);
+
+                doc.save(`Laporan_Shorebase_${thns[0]}.pdf`);
+            } catch (e) { alert("Memori penuh, kurangi jumlah foto."); }
+            finally { document.getElementById('loading').style.display = "none"; }
+        }, 500);
+    }
+
+    function kirimWA() {
+        let p = "*LAPORAN SHOREBASE*\n\n";
+        db.forEach((d, i) => { p += `${i+1}. *${d.tgl}* - ${d.lok}\nKet: ${d.akt}\nStatus: ${d.stat}\n\n`; });
+        window.open("https://wa.me/?text=" + encodeURIComponent(p), '_blank');
+    }
+
+    function hapusSatu(idx) { if(confirm("Hapus?")) { db.splice(idx,1); localStorage.setItem('asdp_v16_final', JSON.stringify(db)); location.reload(); } }
+    function hapusSemua() { if(confirm("Reset semua data lokal?")) { localStorage.clear(); location.reload(); } }
+</script>
+</body>
+</html>
