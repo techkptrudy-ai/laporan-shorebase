@@ -3,171 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASDP Shorebase v16.4 - Kapasitas Besar</title>
+    <title>ASDP Shorebase v16.5 - Cloud Storage</title>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root { --asdp-blue: #0054a6; --asdp-orange: #f26522; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f4f8; }
         .container { padding: 15px; max-width: 600px; margin: auto; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        h2 { color: var(--asdp-blue); font-size: 1rem; border-left: 4px solid var(--asdp-orange); padding-left: 10px; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        h2 { color: var(--asdp-blue); font-size: 1rem; border-left: 4px solid var(--asdp-orange); padding-left: 10px; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
         .btn { padding: 15px; border: none; border-radius: 8px; font-weight: bold; width: 100%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
         .btn-save { background: var(--asdp-blue); }
         .btn-pdf { background: var(--asdp-orange); }
-        .btn-reset { background: #d32f2f; margin-top: 30px; font-size: 10px; }
-        #loading { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; flex-direction:column; align-items:center; justify-content:center; }
-        .recent-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        #loading { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:10000; flex-direction:column; align-items:center; justify-content:center; }
+        .recent-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
         .recent-table td { padding: 10px; border-bottom: 1px solid #eee; }
-        .count-badge { background: var(--asdp-blue); color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; float: right; }
     </style>
 </head>
 <body>
 
 <div id="loading">
-    <i class="fas fa-circle-notch fa-spin fa-3x" style="color:var(--asdp-blue)"></i>
-    <p id="loadText" style="margin-top:15px; font-weight:bold;">Mengolah Gambar...</p>
+    <i class="fas fa-cloud-upload-alt fa-spin fa-3x" style="color:var(--asdp-blue)"></i>
+    <p id="loadText" style="margin-top:15px; font-weight:bold;">Mengirim ke Cloud...</p>
 </div>
 
 <div class="container">
     <div class="card">
-        <h2>INPUT LAPORAN <span id="count" class="count-badge">0</span></h2>
+        <h2>INPUT HARIAN</h2>
         <input type="date" id="tgl">
         <select id="lok">
             <option>KMP.Batumandi</option><option>KMP.Sebuku</option><option>KMP.Legundi</option>
             <option>KMP.Jatra 3</option><option>KMP.Portlink</option><option>Workshop</option>
         </select>
         <textarea id="akt" rows="3" placeholder="Uraian pekerjaan..."></textarea>
-        <label style="font-size: 11px; color: red;">* Ambil foto dari kamera</label>
-        <input type="file" id="foto" accept="image/*" onchange="processImage(this)">
-        <button class="btn btn-save" onclick="simpan()"><i class="fas fa-cloud-upload-alt"></i> SIMPAN LAPORAN</button>
+        <input type="file" id="foto" accept="image/*" onchange="compressImage(this)">
+        <button class="btn btn-save" onclick="simpanData()"><i class="fas fa-paper-plane"></i> SIMPAN KE GOOGLE SHEETS</button>
     </div>
 
     <div class="card">
-        <h2>DOWNLOAD HASIL</h2>
-        <p style="font-size: 11px; color: #666;">Kumpulkan sampai 31 laporan baru klik cetak.</p>
-        <button class="btn btn-pdf" onclick="cetakPDF()"><i class="fas fa-file-pdf"></i> CETAK LAPORAN (MAX 31 DATA)</button>
+        <h2>CETAK PDF (LOKAL)</h2>
+        <p style="font-size: 10px; color: #666;">PDF ini untuk laporan harian di HP. Data lengkap + Foto tersimpan permanen di Google Sheets Bapak.</p>
+        <button class="btn btn-pdf" onclick="cetakPDF()"><i class="fas fa-file-pdf"></i> DOWNLOAD PDF</button>
     </div>
 
     <div class="card">
-        <h2>RIWAYAT BULAN INI</h2>
+        <h2>RIWAYAT INPUT</h2>
         <table class="recent-table" id="historyTable"></table>
-        <button class="btn btn-reset" onclick="hapusSemua()">RESET DATA BULAN BARU</button>
     </div>
 </div>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('asdp_v16_4')) || [];
-    let imgBase64 = "";
+    // --- PENTING: PASTE WEB APP URL BAPAK DI SINI ---
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxAgBYFtBpttvZ4wOpmgM1azCFHlUHcMYWSgcRYm6LIudjCn_XDqNb97oXSUG6nUBj-Ug/exec"; 
+
+    let db = JSON.parse(localStorage.getItem('asdp_cloud_v1')) || [];
+    let currentImg = "";
 
     document.getElementById('tgl').valueAsDate = new Date();
-    updateTampilan();
+    updateTable();
 
-    // FUNGSI KOMPRESI EKSTRIM AGAR KUAT BANYAK FOTO
-    function processImage(input) {
+    function compressImage(input) {
         if (input.files && input.files[0]) {
-            document.getElementById('loading').style.display = "flex";
-            document.getElementById('loadText').innerText = "Mengecilkan Ukuran Foto...";
-            
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
                 img.src = e.target.result;
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    
-                    // Ukuran diperkecil agar PDF ringan (Lebar 300px sudah cukup tajam di tabel)
-                    const maxW = 300;
+                    const maxW = 400;
                     const scale = maxW / img.width;
                     canvas.width = maxW;
                     canvas.height = img.height * scale;
-                    
+                    const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    // Kualitas 0.4 (40%) agar file sangat kecil tapi tetap jelas
-                    imgBase64 = canvas.toDataURL('image/jpeg', 0.4);
-                    document.getElementById('loading').style.display = "none";
+                    currentImg = canvas.toDataURL('image/jpeg', 0.6);
                 };
             };
             reader.readAsDataURL(input.files[0]);
         }
     }
 
-    function simpan() {
-        if(!document.getElementById('akt').value) return alert("Uraian wajib diisi!");
+    async function simpanData() {
+        const akt = document.getElementById('akt').value;
+        if(!akt) return alert("Uraian pekerjaan harus diisi!");
+        
         const data = {
             tgl: document.getElementById('tgl').value,
             lok: document.getElementById('lok').value,
-            akt: document.getElementById('akt').value,
-            foto: imgBase64
+            akt: akt,
+            stat: "Selesai",
+            foto: currentImg
         };
-        db.push(data);
-        localStorage.setItem('asdp_v16_4', JSON.stringify(db));
-        alert("Laporan tersimpan di riwayat!");
-        location.reload();
+
+        document.getElementById('loading').style.display = "flex";
+        
+        try {
+            // Kirim data ke Google Apps Script (Cloud)
+            await fetch(WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify(data)
+            });
+
+            // Simpan teks saja di HP agar tidak penuh (foto dihapus dari memori HP)
+            const dataLokal = {...data, foto: ""}; 
+            db.push(dataLokal);
+            localStorage.setItem('asdp_cloud_v1', JSON.stringify(db));
+            
+            alert("Berhasil! Data masuk ke Sheets & Foto masuk ke Drive.");
+            location.reload();
+        } catch (e) {
+            alert("Gagal kirim ke Cloud. Cek koneksi internet Bapak.");
+        } finally {
+            document.getElementById('loading').style.display = "none";
+        }
     }
 
-    function updateTampilan() {
-        document.getElementById('count').innerText = db.length;
+    function updateTable() {
         const table = document.getElementById('historyTable');
         table.innerHTML = "";
-        db.slice().reverse().forEach((d, i) => {
-            table.innerHTML += `<tr><td><b>${d.lok}</b><br>${d.tgl}</td><td align="right"><i class="fas fa-check-circle" style="color:green"></i></td></tr>`;
+        db.slice().reverse().forEach((d) => {
+            table.innerHTML += `<tr><td><b>${d.lok}</b><br><small>${d.tgl}</small></td><td align="right"><i class="fas fa-cloud-done" style="color:blue"></i></td></tr>`;
         });
     }
 
-    async function cetakPDF() {
-        if(db.length === 0) return alert("Belum ada data.");
-        document.getElementById('loading').style.display = "flex";
-        document.getElementById('loadText').innerText = "Menyusun PDF (" + db.length + " Laporan)...";
-
-        setTimeout(async () => {
-            try {
-                const { jsPDF } = window.jspdf;
-                // Aktifkan kompresi internal PDF
-                const doc = new jsPDF('p', 'mm', 'a4', true);
-                
-                doc.setFontSize(14);
-                doc.text("LAPORAN HARIAN SHOREBASE ASDP", 14, 15);
-                doc.setFontSize(10);
-                doc.text("Jumlah Laporan: " + db.length, 14, 21);
-                doc.line(14, 23, 196, 23);
-
-                const body = db.map((d, i) => [i + 1, d.tgl, d.lok, d.akt, ""]);
-
-                doc.autoTable({
-                    startY: 28,
-                    head: [['No', 'Tanggal', 'Unit', 'Uraian Pekerjaan', 'Dokumentasi']],
-                    body: body,
-                    styles: { fontSize: 7, valign: 'middle', overflow: 'linebreak' },
-                    columnStyles: { 3: { cellWidth: 60 }, 4: { cellWidth: 35, minCellHeight: 25 } },
-                    didDrawCell: function(data) {
-                        if (data.column.index === 4 && data.cell.section === 'body') {
-                            const img = db[data.row.index].foto;
-                            if (img && img.length > 100) {
-                                // Menggunakan mode 'FAST' agar tidak membebani RAM
-                                try { doc.addImage(img, 'JPEG', data.cell.x + 2, data.cell.y + 2, 31, 21, undefined, 'FAST'); } catch(e){}
-                            }
-                        }
-                    }
-                });
-
-                doc.save("Laporan_Bulanan_ASDP.pdf");
-            } catch (e) {
-                alert("Memori HP Penuh. Silakan hapus beberapa riwayat atau coba di HP yang lebih kuat.");
-            } finally {
-                document.getElementById('loading').style.display = "none";
-            }
-        }, 1000);
-    }
-
-    function hapusSemua() {
-        if(confirm("Hapus semua riwayat untuk memulai bulan baru?")) {
-            localStorage.clear();
-            location.reload();
-        }
+    function cetakPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text("Laporan Shorebase ASDP", 14, 15);
+        // PDF ini hanya berisi teks riwayat input hari ini
+        const rows = db.map((d, i) => [i + 1, d.tgl, d.lok, d.akt]);
+        doc.autoTable({ head: [['No', 'Tgl', 'Unit', 'Pekerjaan']], body: rows, startY: 20 });
+        doc.save("Laporan_Harian.pdf");
     }
 </script>
 </body>
