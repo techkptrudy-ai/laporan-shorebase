@@ -10,17 +10,82 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        :root { --asdp-blue: #0054a6; --asdp-orange: #f26522; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f4f8; }
-        .navbar { background: white; padding: 10px 20px; border-bottom: 4px solid var(--asdp-blue); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        /* Variabel Warna Modern */
+        :root { 
+            --asdp-blue: #0054a6; 
+            --asdp-orange: #f26522;
+            --bg-body: #f0f4f8;
+            --bg-card: #ffffff;
+            --text-main: #333333;
+            --text-label: #666666;
+            --border-color: #dddddd;
+            --input-bg: #ffffff;
+            --navbar-bg: #ffffff;
+        }
+
+        /* Tema Gelap */
+        [data-theme="dark"] {
+            --bg-body: #121826;
+            --bg-card: #1e2533;
+            --text-main: #e0e6ed;
+            --text-label: #a0aec0;
+            --border-color: #2d3748;
+            --input-bg: #2d3748;
+            --navbar-bg: #1e2533;
+        }
+
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            margin: 0; 
+            background: var(--bg-body); 
+            color: var(--text-main);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .navbar { 
+            background: var(--navbar-bg); 
+            padding: 10px 20px; 
+            border-bottom: 4px solid var(--asdp-blue); 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         .container { padding: 15px; max-width: 600px; margin: auto; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h2 { margin-top: 0; color: var(--asdp-blue); font-size: 1rem; border-left: 4px solid var(--asdp-orange); padding-left: 10px; text-transform: uppercase; }
-        label { display: block; margin-top: 12px; font-weight: bold; font-size: 0.75rem; color: #666; }
-        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 10px; font-size: 15px; box-sizing: border-box; }
+        .card { background: var(--bg-card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; transition: background 0.3s; }
         
+        h2 { margin-top: 0; color: var(--asdp-blue); font-size: 1rem; border-left: 4px solid var(--asdp-orange); padding-left: 10px; text-transform: uppercase; }
+        label { display: block; margin-top: 12px; font-weight: bold; font-size: 0.75rem; color: var(--text-label); }
+        
+        input, select, textarea { 
+            width: 100%; padding: 12px; margin-top: 5px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 10px; font-size: 15px; box-sizing: border-box; 
+            background: var(--input-bg);
+            color: var(--text-main);
+        }
+        
+        /* Dark Mode Toggle Button */
+        .theme-toggle {
+            cursor: pointer;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--asdp-blue);
+            color: white;
+            border: none;
+            transition: 0.3s;
+        }
+
         .photo-options { display: flex; gap: 10px; margin-top: 8px; }
-        .btn-opt { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 10px; background: #fafafa; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.75rem; color: #555; transition: 0.3s; }
+        .btn-opt { flex: 1; padding: 12px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--input-bg); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.75rem; color: var(--text-label); transition: 0.3s; }
         .btn-opt:active { background: #eee; transform: scale(0.95); }
         .btn-opt i { font-size: 1.2rem; color: var(--asdp-blue); }
 
@@ -28,17 +93,18 @@
         .btn-save { background: var(--asdp-blue); }
         .btn-update { background: #28a745; } 
         .btn-pdf { background: var(--asdp-orange); }
-        .btn-setup { background: #f8f8f8; color: #333; font-size: 0.7rem; border: 1px dashed #bbb; padding: 8px; }
+        .btn-setup { background: var(--input-bg); color: var(--text-main); font-size: 0.7rem; border: 1px dashed var(--border-color); padding: 8px; }
         
-        #preview-img { width: 100%; max-width: 180px; border-radius: 10px; margin-top: 15px; display: none; border: 2px solid #eee; }
-        .preview-setup { height: 45px; object-fit: contain; margin-top: 5px; display: none; border: 1px solid #eee; background: white; padding: 2px; }
+        #preview-img { width: 100%; max-width: 180px; border-radius: 10px; margin-top: 15px; display: none; border: 2px solid var(--border-color); }
+        .preview-setup { height: 45px; object-fit: contain; margin-top: 5px; display: none; border: 1px solid var(--border-color); background: white; padding: 2px; }
         
-        .recent-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.75rem; }
+        .recent-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.75rem; color: var(--text-main); }
         .btn-edit-inline { color: var(--asdp-blue); cursor: pointer; font-size: 1.1rem; padding: 5px; margin-left: 10px; }
         .btn-delete-inline { color: #dc3545; cursor: pointer; font-size: 1.1rem; padding: 5px; }
         
         #loading { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; color: white; }
         .btn-clear-all { background: #fbe9e7; color: #d32f2f; border: 1px solid #ffccbc; padding: 8px; font-size: 0.7rem; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
+        [data-theme="dark"] .btn-clear-all { background: #3d2222; color: #ff8a80; border-color: #5d3535; }
     </style>
 </head>
 <body>
@@ -49,8 +115,13 @@
 </div>
 
 <div class="navbar">
-    <b style="color:var(--asdp-blue); font-size: 13px;"><i class="fas fa-ship"></i> ASDP SHOREBASE PRO</b>
-    <span style="font-size: 9px; color: #aaa; background: #f0f0f0; padding: 2px 5px; border-radius: 5px;">v19.1</span>
+    <div>
+        <b style="color:var(--asdp-blue); font-size: 13px;"><i class="fas fa-ship"></i> ASDP SHOREBASE PRO</b>
+        <span style="font-size: 9px; color: #aaa; background: rgba(0,0,0,0.05); padding: 2px 5px; border-radius: 5px;">v19.1</span>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">
+        <i class="fas fa-moon"></i>
+    </button>
 </div>
 
 <div class="container">
@@ -98,7 +169,7 @@
         </button>
     </div>
 
-    <div class="card" style="background: #fffcf5; border: 1px solid #ffeeba;">
+    <div class="card" style="border: 1px solid var(--asdp-orange);">
         <h2><i class="fas fa-user-cog"></i> Setup Atribut</h2>
         <label>Logo ASDP</label>
         <input type="file" accept="image/*" onchange="processFile(this, 'logo_site')" class="btn-setup">
@@ -134,6 +205,31 @@
 <script>
     let db;
     let imgLogo = "", imgTTDUser = "", imgTTDMgr = "", tempFoto = "";
+
+    // FITUR DARK MODE
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute("data-theme");
+        const newTheme = currentTheme === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", newTheme);
+        localStorage.setItem("theme", newTheme);
+        updateThemeIcon(newTheme);
+    }
+
+    function updateThemeIcon(theme) {
+        const btn = document.getElementById('theme-btn');
+        if(theme === "dark") {
+            btn.innerHTML = '<i class="fas fa-sun"></i>';
+            btn.style.background = 'var(--asdp-orange)';
+        } else {
+            btn.innerHTML = '<i class="fas fa-moon"></i>';
+            btn.style.background = 'var(--asdp-blue)';
+        }
+    }
+
+    // Load Theme on Start
+    const savedTheme = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+    updateThemeIcon(savedTheme);
 
     const request = indexedDB.open("ShorebaseDB_v19_1", 1);
     request.onupgradeneeded = e => {
@@ -197,27 +293,13 @@
         const tglVal = document.getElementById('tgl').value;
         const statusVal = document.getElementById('status').value;
         const editId = document.getElementById('edit-id').value;
-
         if(!akt || !tglVal) return alert("Mohon lengkapi Tanggal & Uraian!");
-        
         const data = { tgl: tglVal, lok: document.getElementById('lok').value, status: statusVal, akt, foto: tempFoto };
-        
         let tx = db.transaction("laporan", "readwrite");
         let store = tx.objectStore("laporan");
-
-        if(editId) {
-            data.id = parseInt(editId);
-            store.put(data);
-            alert("Data Berhasil Diperbarui!");
-        } else {
-            store.add(data);
-            alert("Data Tersimpan!");
-        }
-
-        tx.oncomplete = () => {
-            resetForm();
-            refreshTable();
-        };
+        if(editId) { data.id = parseInt(editId); store.put(data); alert("Data Berhasil Diperbarui!"); }
+        else { store.add(data); alert("Data Tersimpan!"); }
+        tx.oncomplete = () => { resetForm(); refreshTable(); };
     }
 
     function editData(id) {
@@ -228,16 +310,8 @@
             document.getElementById('lok').value = d.lok;
             document.getElementById('status').value = d.status;
             document.getElementById('akt').value = d.akt;
-            
-            if(d.foto) {
-                tempFoto = d.foto;
-                document.getElementById('preview-img').src = d.foto;
-                document.getElementById('preview-img').style.display = "block";
-            } else {
-                tempFoto = "";
-                document.getElementById('preview-img').style.display = "none";
-            }
-
+            if(d.foto) { tempFoto = d.foto; document.getElementById('preview-img').src = d.foto; document.getElementById('preview-img').style.display = "block"; }
+            else { tempFoto = ""; document.getElementById('preview-img').style.display = "none"; }
             document.getElementById('form-title').innerHTML = '<i class="fas fa-pen-square"></i> Update Laporan';
             document.getElementById('btn-main').innerHTML = '<i class="fas fa-sync-alt"></i> UPDATE DATA';
             document.getElementById('btn-main').className = 'btn btn-update';
@@ -250,21 +324,14 @@
         if(confirm("Apakah Anda yakin ingin menghapus laporan ini?")) {
             let tx = db.transaction("laporan", "readwrite");
             tx.objectStore("laporan").delete(id);
-            tx.oncomplete = () => {
-                refreshTable();
-                if(document.getElementById('edit-id').value == id) resetForm();
-            };
+            tx.oncomplete = () => { refreshTable(); if(document.getElementById('edit-id').value == id) resetForm(); };
         }
     }
 
-    // FUNGSI BARU: Hapus Semua Riwayat Laporan
     function clearAllData() {
-        if(confirm("PERINGATAN!\n\nSemua riwayat laporan akan dihapus secara permanen untuk mengosongkan memori. Pastikan Anda sudah mencetak laporan PDF yang dibutuhkan.\n\nLanjutkan?")) {
+        if(confirm("PERINGATAN!\n\nSemua riwayat laporan akan dihapus secara permanen. Lanjutkan?")) {
             let tx = db.transaction("laporan", "readwrite");
-            let store = tx.objectStore("laporan");
-            let req = store.clear();
-            
-            req.onsuccess = () => {
+            tx.objectStore("laporan").clear().onsuccess = () => {
                 alert("Semua riwayat berhasil dibersihkan!");
                 refreshTable();
                 resetForm();
@@ -278,7 +345,6 @@
         document.getElementById('tgl').valueAsDate = new Date();
         document.getElementById('preview-img').style.display = "none";
         tempFoto = "";
-        
         document.getElementById('form-title').innerHTML = '<i class="fas fa-edit"></i> Form Pekerjaan';
         document.getElementById('btn-main').innerHTML = '<i class="fas fa-save"></i> SIMPAN DATA';
         document.getElementById('btn-main').className = 'btn btn-save';
@@ -288,26 +354,23 @@
     function refreshTable() {
         const table = document.getElementById('historyTable');
         const clearContainer = document.getElementById('clear-container');
-        table.innerHTML = "<tr><td colspan='3' style='color:#888; padding-bottom:10px; border-bottom: 2px solid #eee;'>Riwayat Laporan Tersimpan:</td></tr>";
-        
+        table.innerHTML = "<tr><td colspan='3' style='color:var(--text-label); padding-bottom:10px; border-bottom: 2px solid var(--border-color);'>Riwayat Laporan Tersimpan:</td></tr>";
         db.transaction("laporan").objectStore("laporan").getAll().onsuccess = e => {
             const res = e.target.result;
             res.sort((a, b) => new Date(b.tgl) - new Date(a.tgl));
-            
             res.forEach(d => {
                 table.innerHTML += `
-                <tr style='border-bottom:1px solid #eee;'>
+                <tr style='border-bottom:1px solid var(--border-color);'>
                     <td style='padding:12px 0;'><b>${d.lok}</b><br><small>${d.tgl}</small></td>
-                    <td align="center"><span style="background:#eee; padding:2px 6px; border-radius:4px;"><b>${d.status}</b></span></td>
+                    <td align="center"><b>${d.status}</b></td>
                     <td align="right">
-                        <i class="fas fa-trash-alt btn-delete-inline" title="Hapus" onclick="deleteData(${d.id})"></i>
-                        <i class="fas fa-pencil-alt btn-edit-inline" title="Edit" onclick="editData(${d.id})"></i>
+                        <i class="fas fa-trash-alt btn-delete-inline" onclick="deleteData(${d.id})"></i>
+                        <i class="fas fa-pencil-alt btn-edit-inline" onclick="editData(${d.id})"></i>
                     </td>
                 </tr>`;
             });
-
             if(res.length > 0) {
-                clearContainer.innerHTML = `<button class="btn-clear-all" onclick="clearAllData()"><i class="fas fa-eraser"></i> HAPUS SEMUA RIWAYAT (KOSONGKAN MEMORI)</button>`;
+                clearContainer.innerHTML = `<button class="btn-clear-all" onclick="clearAllData()"><i class="fas fa-eraser"></i> HAPUS SEMUA RIWAYAT</button>`;
             } else {
                 table.innerHTML += "<tr><td colspan='3' align='center' style='padding:20px; color:#aaa;'>Belum ada data.</td></tr>";
                 clearContainer.innerHTML = "";
@@ -320,67 +383,32 @@
         db.transaction("laporan").objectStore("laporan").getAll().onsuccess = e => {
             const allData = e.target.result;
             allData.sort((a,b) => new Date(a.tgl) - new Date(b.tgl));
-            
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
-
             if(imgLogo) try { doc.addImage(imgLogo, 'PNG', 14, 10, 40, 15); } catch(err){}
             doc.setFontSize(14); doc.setTextColor(0, 84, 166); doc.setFont(undefined, 'bold');
             doc.text("SHOREBASE DAILY REPORT", 196, 18, {align:'right'});
-            doc.setFontSize(8); doc.setTextColor(100); doc.setFont(undefined, 'normal');
-            doc.text("Doc No: ASDP/SB/REPT/" + new Date().getFullYear(), 196, 23, {align:'right'});
             doc.line(14, 28, 196, 28);
-
             doc.autoTable({
                 startY: 33,
                 head: [['No', 'Hari & Tanggal', 'Unit', 'Uraian Pekerjaan', 'Status']],
                 body: allData.map((d, i) => [i+1, formatIndo(d.tgl), d.lok, d.akt, d.status]),
-                headStyles: { fillColor: [0, 84, 166], halign: 'center', valign: 'middle' },
-                columnStyles: {
-                    0: { cellWidth: 10, halign: 'center', valign: 'middle' },
-                    1: { cellWidth: 38, valign: 'middle' },
-                    2: { cellWidth: 30, valign: 'middle' },
-                    3: { cellWidth: 'auto', valign: 'middle' },
-                    4: { cellWidth: 22, halign: 'center', valign: 'middle' }
-                },
-                styles: { fontSize: 7.5, overflow: 'linebreak', cellPadding: 3 },
+                headStyles: { fillColor: [0, 84, 166], halign: 'center' },
                 theme: 'grid'
             });
-
-            let y = doc.lastAutoTable.finalY + 15;
-            if(y > 230) { doc.addPage(); y = 25; }
-            doc.setFontSize(9); doc.setTextColor(0);
-            doc.text("Dibuat Oleh,", 20, y);
-            if(imgTTDUser) try { doc.addImage(imgTTDUser, 'PNG', 15, y + 2, 35, 15); } catch(err){}
-            doc.setFont(undefined, 'bold'); doc.text("SYAHRUDI", 20, y + 22);
-            doc.text("Diketahui Oleh,", 140, y);
-            if(imgTTDMgr) try { doc.addImage(imgTTDMgr, 'PNG', 135, y + 2, 35, 15); } catch(err){}
-            doc.setFont(undefined, 'bold'); doc.text("DEDI SISWANTO", 140, y + 22);
-
-            const pages = doc.internal.getNumberOfPages();
-            for(let i = 1; i <= pages; i++) {
-                doc.setPage(i);
-                doc.setFontSize(7); doc.setTextColor(150);
-                doc.text("Copyright © 2026 Obotech Digital System - ASDP Shorebase Mobile Reporting Service", 105, 290, {align: 'center'});
-            }
-
             if(allData.some(d => d.foto)) {
                 doc.addPage();
-                doc.setFontSize(12); doc.setTextColor(0, 84, 166); doc.text("LAMPIRAN DOKUMENTASI", 14, 15);
-                doc.line(14, 17, 196, 17);
+                doc.text("LAMPIRAN DOKUMENTASI", 14, 15);
                 let xP=14, yP=25, c=0;
                 allData.forEach(d => {
                     if(d.foto) {
                         if(c>0 && c%4===0) { doc.addPage(); yP=25; }
                         doc.addImage(d.foto, 'JPEG', xP, yP, 85, 60);
-                        doc.setFontSize(8); doc.setTextColor(0);
-                        doc.text(`${d.lok} (${d.status}) - ${formatIndo(d.tgl)}`, xP, yP+65);
                         if(xP===14) xP=108; else { xP=14; yP+=78; }
                         c++;
                     }
                 });
             }
-
             doc.save(`Laporan_Shorebase_${Date.now()}.pdf`);
             document.getElementById('loading').style.display = "none";
         };
