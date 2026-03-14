@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASDP Shorebase v19.0 - Table Fix</title>
+    <title>ASDP Shorebase v19.1 - Edit Feature</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -26,6 +26,7 @@
 
         .btn { padding: 15px; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; color: white; }
         .btn-save { background: var(--asdp-blue); }
+        .btn-update { background: #28a745; } /* Warna hijau untuk update */
         .btn-pdf { background: var(--asdp-orange); }
         .btn-setup { background: #f8f8f8; color: #333; font-size: 0.7rem; border: 1px dashed #bbb; padding: 8px; }
         
@@ -33,6 +34,8 @@
         .preview-setup { height: 45px; object-fit: contain; margin-top: 5px; display: none; border: 1px solid #eee; background: white; padding: 2px; }
         
         .recent-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.75rem; }
+        .btn-edit-inline { color: var(--asdp-blue); cursor: pointer; font-size: 1.1rem; padding: 5px; }
+        
         #loading { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; color: white; }
     </style>
 </head>
@@ -45,13 +48,13 @@
 
 <div class="navbar">
     <b style="color:var(--asdp-blue); font-size: 13px;"><i class="fas fa-ship"></i> ASDP SHOREBASE PRO</b>
-    <span style="font-size: 9px; color: #aaa; background: #f0f0f0; padding: 2px 5px; border-radius: 5px;">v19.0</span>
+    <span style="font-size: 9px; color: #aaa; background: #f0f0f0; padding: 2px 5px; border-radius: 5px;">v19.1</span>
 </div>
 
 <div class="container">
     <div class="card">
-        <h2><i class="fas fa-edit"></i> Form Pekerjaan</h2>
-        <label>Hari & Tanggal</label>
+        <h2 id="form-title"><i class="fas fa-edit"></i> Form Pekerjaan</h2>
+        <input type="hidden" id="edit-id"> <label>Hari & Tanggal</label>
         <input type="date" id="tgl">
         
         <label>Unit / Kapal</label>
@@ -85,8 +88,11 @@
         
         <center><img id="preview-img"></center>
         
-        <button class="btn btn-save" onclick="saveData()">
+        <button id="btn-main" class="btn btn-save" onclick="saveData()">
             <i class="fas fa-save"></i> SIMPAN DATA
+        </button>
+        <button id="btn-cancel" class="btn" style="background:#666; display:none;" onclick="resetForm()">
+            BATAL EDIT
         </button>
     </div>
 
@@ -126,7 +132,7 @@
     let db;
     let imgLogo = "", imgTTDUser = "", imgTTDMgr = "", tempFoto = "";
 
-    const request = indexedDB.open("ShorebaseDB_v19_0", 1);
+    const request = indexedDB.open("ShorebaseDB_v19_1", 1);
     request.onupgradeneeded = e => {
         let dbEx = e.target.result;
         dbEx.createObjectStore("laporan", { keyPath: "id", autoIncrement: true });
@@ -163,9 +169,9 @@
                         document.getElementById('preview-img').style.display = "block"; 
                     } else {
                         db.transaction("settings", "readwrite").objectStore("settings").put({key: type, val: base64});
-                        if(type === 'logo_site') { imgLogo = base64; document.getElementById('p-logo').src = base64; document.getElementById('p-logo').style.display = "block"; }
-                        if(type === 'ttd_user') { imgTTDUser = base64; document.getElementById('p-ttd-user').src = base64; document.getElementById('p-ttd-user').style.display = "block"; }
-                        if(type === 'ttd_mgr') { imgTTDMgr = base64; document.getElementById('p-ttd-mgr').src = base64; document.getElementById('p-ttd-mgr').style.display = "block"; }
+                        if(type === 'logo_site') { imgLogo = s.val; document.getElementById('p-logo').src = s.val; document.getElementById('p-logo').style.display = "block"; }
+                        if(type === 'ttd_user') { imgTTDUser = s.val; document.getElementById('p-ttd-user').src = s.val; document.getElementById('p-ttd-user').style.display = "block"; }
+                        if(type === 'ttd_mgr') { imgTTDMgr = s.val; document.getElementById('p-ttd-mgr').src = s.val; document.getElementById('p-ttd-mgr').style.display = "block"; }
                     }
                 };
             };
@@ -187,24 +193,83 @@
         const akt = document.getElementById('akt').value;
         const tglVal = document.getElementById('tgl').value;
         const statusVal = document.getElementById('status').value;
+        const editId = document.getElementById('edit-id').value;
+
         if(!akt || !tglVal) return alert("Mohon lengkapi Tanggal & Uraian!");
         
         const data = { tgl: tglVal, lok: document.getElementById('lok').value, status: statusVal, akt, foto: tempFoto };
-        db.transaction("laporan", "readwrite").objectStore("laporan").add(data).onsuccess = () => {
+        
+        let tx = db.transaction("laporan", "readwrite");
+        let store = tx.objectStore("laporan");
+
+        if(editId) {
+            data.id = parseInt(editId);
+            store.put(data);
+            alert("Data Berhasil Diperbarui!");
+        } else {
+            store.add(data);
             alert("Data Tersimpan!");
-            document.getElementById('akt').value = "";
-            document.getElementById('preview-img').style.display = "none";
-            tempFoto = "";
+        }
+
+        tx.oncomplete = () => {
+            resetForm();
             refreshTable();
         };
     }
 
+    function editData(id) {
+        db.transaction("laporan").objectStore("laporan").get(id).onsuccess = e => {
+            const d = e.target.result;
+            document.getElementById('edit-id').value = d.id;
+            document.getElementById('tgl').value = d.tgl;
+            document.getElementById('lok').value = d.lok;
+            document.getElementById('status').value = d.status;
+            document.getElementById('akt').value = d.akt;
+            
+            if(d.foto) {
+                tempFoto = d.foto;
+                document.getElementById('preview-img').src = d.foto;
+                document.getElementById('preview-img').style.display = "block";
+            } else {
+                tempFoto = "";
+                document.getElementById('preview-img').style.display = "none";
+            }
+
+            // Ubah Tampilan Form ke Mode Update
+            document.getElementById('form-title').innerHTML = '<i class="fas fa-pen-square"></i> Update Laporan';
+            document.getElementById('btn-main').innerHTML = '<i class="fas fa-sync-alt"></i> UPDATE DATA';
+            document.getElementById('btn-main').className = 'btn btn-update';
+            document.getElementById('btn-cancel').style.display = 'block';
+            window.scrollTo(0,0);
+        };
+    }
+
+    function resetForm() {
+        document.getElementById('edit-id').value = "";
+        document.getElementById('akt').value = "";
+        document.getElementById('tgl').valueAsDate = new Date();
+        document.getElementById('preview-img').style.display = "none";
+        tempFoto = "";
+        
+        document.getElementById('form-title').innerHTML = '<i class="fas fa-edit"></i> Form Pekerjaan';
+        document.getElementById('btn-main').innerHTML = '<i class="fas fa-save"></i> SIMPAN DATA';
+        document.getElementById('btn-main').className = 'btn btn-save';
+        document.getElementById('btn-cancel').style.display = 'none';
+    }
+
     function refreshTable() {
         const table = document.getElementById('historyTable');
-        table.innerHTML = "";
+        table.innerHTML = "<tr><td colspan='3' style='color:#888; padding-bottom:5px;'>3 Laporan Terakhir:</td></tr>";
         db.transaction("laporan").objectStore("laporan").getAll().onsuccess = e => {
             e.target.result.reverse().slice(0, 3).forEach(d => {
-                table.innerHTML += `<tr style='border-bottom:1px solid #eee;'><td style='padding:8px 0;'><b>${d.lok}</b><br><small>${d.tgl}</small></td><td align="right"><b>${d.status}</b></td></tr>`;
+                table.innerHTML += `
+                <tr style='border-bottom:1px solid #eee;'>
+                    <td style='padding:8px 0;'><b>${d.lok}</b><br><small>${d.tgl}</small></td>
+                    <td align="center"><b>${d.status}</b></td>
+                    <td align="right">
+                        <i class="fas fa-pencil-alt btn-edit-inline" onclick="editData(${d.id})"></i>
+                    </td>
+                </tr>`;
             });
         };
     }
@@ -216,7 +281,6 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
 
-            // HEADER
             if(imgLogo) try { doc.addImage(imgLogo, 'PNG', 14, 10, 40, 15); } catch(err){}
             doc.setFontSize(14); doc.setTextColor(0, 84, 166); doc.setFont(undefined, 'bold');
             doc.text("SHOREBASE DAILY REPORT", 196, 18, {align:'right'});
@@ -224,14 +288,13 @@
             doc.text("Doc No: ASDP/SB/REPT/" + new Date().getFullYear(), 196, 23, {align:'right'});
             doc.line(14, 28, 196, 28);
 
-            // TABEL FIX NO & STATUS
             doc.autoTable({
                 startY: 33,
                 head: [['No', 'Hari & Tanggal', 'Unit', 'Uraian Pekerjaan', 'Status']],
                 body: allData.map((d, i) => [i+1, formatIndo(d.tgl), d.lok, d.akt, d.status]),
                 headStyles: { fillColor: [0, 84, 166], halign: 'center', valign: 'middle' },
                 columnStyles: {
-                    0: { cellWidth: 10, halign: 'center', valign: 'middle' }, // LEBAR DITAMBAH KE 10MM & TENGAH
+                    0: { cellWidth: 10, halign: 'center', valign: 'middle' },
                     1: { cellWidth: 38, valign: 'middle' },
                     2: { cellWidth: 30, valign: 'middle' },
                     3: { cellWidth: 'auto', valign: 'middle' },
@@ -241,19 +304,16 @@
                 theme: 'grid'
             });
 
-            // SIGNATURE
             let y = doc.lastAutoTable.finalY + 15;
             if(y > 230) { doc.addPage(); y = 25; }
             doc.setFontSize(9); doc.setTextColor(0);
             doc.text("Dibuat Oleh,", 20, y);
             if(imgTTDUser) try { doc.addImage(imgTTDUser, 'PNG', 15, y + 2, 35, 15); } catch(err){}
             doc.setFont(undefined, 'bold'); doc.text("SYAHRUDI", 20, y + 22);
-
             doc.text("Diketahui Oleh,", 140, y);
             if(imgTTDMgr) try { doc.addImage(imgTTDMgr, 'PNG', 135, y + 2, 35, 15); } catch(err){}
             doc.setFont(undefined, 'bold'); doc.text("DEDI SISWANTO", 140, y + 22);
 
-            // FOOTER COPYRIGHT
             const pages = doc.internal.getNumberOfPages();
             for(let i = 1; i <= pages; i++) {
                 doc.setPage(i);
@@ -261,7 +321,6 @@
                 doc.text("Copyright © 2026 Obotech Digital System - ASDP Shorebase Mobile Reporting Service", 105, 290, {align: 'center'});
             }
 
-            // HALAMAN FOTO
             if(allData.some(d => d.foto)) {
                 doc.addPage();
                 doc.setFontSize(12); doc.setTextColor(0, 84, 166); doc.text("LAMPIRAN DOKUMENTASI", 14, 15);
