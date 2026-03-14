@@ -26,7 +26,7 @@
 
         .btn { padding: 15px; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; color: white; }
         .btn-save { background: var(--asdp-blue); }
-        .btn-update { background: #28a745; } /* Warna hijau untuk update */
+        .btn-update { background: #28a745; } 
         .btn-pdf { background: var(--asdp-orange); }
         .btn-setup { background: #f8f8f8; color: #333; font-size: 0.7rem; border: 1px dashed #bbb; padding: 8px; }
         
@@ -34,9 +34,11 @@
         .preview-setup { height: 45px; object-fit: contain; margin-top: 5px; display: none; border: 1px solid #eee; background: white; padding: 2px; }
         
         .recent-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.75rem; }
-        .btn-edit-inline { color: var(--asdp-blue); cursor: pointer; font-size: 1.1rem; padding: 5px; }
+        .btn-edit-inline { color: var(--asdp-blue); cursor: pointer; font-size: 1.1rem; padding: 5px; margin-left: 10px; }
+        .btn-delete-inline { color: #dc3545; cursor: pointer; font-size: 1.1rem; padding: 5px; }
         
         #loading { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; color: white; }
+        .btn-clear-all { background: #fbe9e7; color: #d32f2f; border: 1px solid #ffccbc; padding: 8px; font-size: 0.7rem; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -121,6 +123,7 @@
             <i class="fas fa-file-pdf"></i> CETAK LAPORAN PRO
         </button>
         <table class="recent-table" id="historyTable"></table>
+        <div id="clear-container"></div>
     </div>
     
     <div style="text-align: center; color: #bbb; font-size: 10px; margin-bottom: 30px;">
@@ -169,9 +172,9 @@
                         document.getElementById('preview-img').style.display = "block"; 
                     } else {
                         db.transaction("settings", "readwrite").objectStore("settings").put({key: type, val: base64});
-                        if(type === 'logo_site') { imgLogo = s.val; document.getElementById('p-logo').src = s.val; document.getElementById('p-logo').style.display = "block"; }
-                        if(type === 'ttd_user') { imgTTDUser = s.val; document.getElementById('p-ttd-user').src = s.val; document.getElementById('p-ttd-user').style.display = "block"; }
-                        if(type === 'ttd_mgr') { imgTTDMgr = s.val; document.getElementById('p-ttd-mgr').src = s.val; document.getElementById('p-ttd-mgr').style.display = "block"; }
+                        if(type === 'logo_site') { imgLogo = base64; document.getElementById('p-logo').src = base64; document.getElementById('p-logo').style.display = "block"; }
+                        if(type === 'ttd_user') { imgTTDUser = base64; document.getElementById('p-ttd-user').src = base64; document.getElementById('p-ttd-user').style.display = "block"; }
+                        if(type === 'ttd_mgr') { imgTTDMgr = base64; document.getElementById('p-ttd-mgr').src = base64; document.getElementById('p-ttd-mgr').style.display = "block"; }
                     }
                 };
             };
@@ -235,13 +238,38 @@
                 document.getElementById('preview-img').style.display = "none";
             }
 
-            // Ubah Tampilan Form ke Mode Update
             document.getElementById('form-title').innerHTML = '<i class="fas fa-pen-square"></i> Update Laporan';
             document.getElementById('btn-main').innerHTML = '<i class="fas fa-sync-alt"></i> UPDATE DATA';
             document.getElementById('btn-main').className = 'btn btn-update';
             document.getElementById('btn-cancel').style.display = 'block';
             window.scrollTo(0,0);
         };
+    }
+
+    function deleteData(id) {
+        if(confirm("Apakah Anda yakin ingin menghapus laporan ini?")) {
+            let tx = db.transaction("laporan", "readwrite");
+            tx.objectStore("laporan").delete(id);
+            tx.oncomplete = () => {
+                refreshTable();
+                if(document.getElementById('edit-id').value == id) resetForm();
+            };
+        }
+    }
+
+    // FUNGSI BARU: Hapus Semua Riwayat Laporan
+    function clearAllData() {
+        if(confirm("PERINGATAN!\n\nSemua riwayat laporan akan dihapus secara permanen untuk mengosongkan memori. Pastikan Anda sudah mencetak laporan PDF yang dibutuhkan.\n\nLanjutkan?")) {
+            let tx = db.transaction("laporan", "readwrite");
+            let store = tx.objectStore("laporan");
+            let req = store.clear();
+            
+            req.onsuccess = () => {
+                alert("Semua riwayat berhasil dibersihkan!");
+                refreshTable();
+                resetForm();
+            };
+        }
     }
 
     function resetForm() {
@@ -259,18 +287,31 @@
 
     function refreshTable() {
         const table = document.getElementById('historyTable');
-        table.innerHTML = "<tr><td colspan='3' style='color:#888; padding-bottom:5px;'>3 Laporan Terakhir:</td></tr>";
+        const clearContainer = document.getElementById('clear-container');
+        table.innerHTML = "<tr><td colspan='3' style='color:#888; padding-bottom:10px; border-bottom: 2px solid #eee;'>Riwayat Laporan Tersimpan:</td></tr>";
+        
         db.transaction("laporan").objectStore("laporan").getAll().onsuccess = e => {
-            e.target.result.reverse().slice(0, 3).forEach(d => {
+            const res = e.target.result;
+            res.sort((a, b) => new Date(b.tgl) - new Date(a.tgl));
+            
+            res.forEach(d => {
                 table.innerHTML += `
                 <tr style='border-bottom:1px solid #eee;'>
-                    <td style='padding:8px 0;'><b>${d.lok}</b><br><small>${d.tgl}</small></td>
-                    <td align="center"><b>${d.status}</b></td>
+                    <td style='padding:12px 0;'><b>${d.lok}</b><br><small>${d.tgl}</small></td>
+                    <td align="center"><span style="background:#eee; padding:2px 6px; border-radius:4px;"><b>${d.status}</b></span></td>
                     <td align="right">
-                        <i class="fas fa-pencil-alt btn-edit-inline" onclick="editData(${d.id})"></i>
+                        <i class="fas fa-trash-alt btn-delete-inline" title="Hapus" onclick="deleteData(${d.id})"></i>
+                        <i class="fas fa-pencil-alt btn-edit-inline" title="Edit" onclick="editData(${d.id})"></i>
                     </td>
                 </tr>`;
             });
+
+            if(res.length > 0) {
+                clearContainer.innerHTML = `<button class="btn-clear-all" onclick="clearAllData()"><i class="fas fa-eraser"></i> HAPUS SEMUA RIWAYAT (KOSONGKAN MEMORI)</button>`;
+            } else {
+                table.innerHTML += "<tr><td colspan='3' align='center' style='padding:20px; color:#aaa;'>Belum ada data.</td></tr>";
+                clearContainer.innerHTML = "";
+            }
         };
     }
 
@@ -278,6 +319,8 @@
         document.getElementById('loading').style.display = "flex";
         db.transaction("laporan").objectStore("laporan").getAll().onsuccess = e => {
             const allData = e.target.result;
+            allData.sort((a,b) => new Date(a.tgl) - new Date(b.tgl));
+            
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
 
