@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASDP Shorebase v19.1 - Edit Feature</title>
+    <title>ASDP Shorebase v19.1 - Pro</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* Variabel Warna Modern */
         :root { 
             --asdp-blue: #0054a6; 
             --asdp-orange: #f26522;
@@ -23,7 +22,6 @@
             --navbar-bg: #ffffff;
         }
 
-        /* Tema Gelap */
         [data-theme="dark"] {
             --bg-body: #121826;
             --bg-card: #1e2533;
@@ -34,64 +32,24 @@
             --navbar-bg: #1e2533;
         }
 
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            margin: 0; 
-            background: var(--bg-body); 
-            color: var(--text-main);
-            transition: background 0.3s, color 0.3s;
-        }
-
-        .navbar { 
-            background: var(--navbar-bg); 
-            padding: 10px 20px; 
-            border-bottom: 4px solid var(--asdp-blue); 
-            position: sticky; 
-            top: 0; 
-            z-index: 1000; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg-body); color: var(--text-main); transition: 0.3s; }
+        .navbar { background: var(--navbar-bg); padding: 10px 20px; border-bottom: 4px solid var(--asdp-blue); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
         .container { padding: 15px; max-width: 600px; margin: auto; }
-        .card { background: var(--bg-card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; transition: background 0.3s; }
+        .card { background: var(--bg-card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
         h2 { margin-top: 0; color: var(--asdp-blue); font-size: 1rem; border-left: 4px solid var(--asdp-orange); padding-left: 10px; text-transform: uppercase; }
         label { display: block; margin-top: 12px; font-weight: bold; font-size: 0.75rem; color: var(--text-label); }
+        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 15px; box-sizing: border-box; background: var(--input-bg); color: var(--text-main); }
         
-        input, select, textarea { 
-            width: 100%; padding: 12px; margin-top: 5px; 
-            border: 1px solid var(--border-color); 
-            border-radius: 10px; font-size: 15px; box-sizing: border-box; 
-            background: var(--input-bg);
-            color: var(--text-main);
-        }
+        .theme-toggle { cursor: pointer; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--asdp-blue); color: white; border: none; }
         
-        /* Dark Mode Toggle Button */
-        .theme-toggle {
-            cursor: pointer;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--asdp-blue);
-            color: white;
-            border: none;
-            transition: 0.3s;
-        }
-
         .photo-options { display: flex; gap: 10px; margin-top: 8px; }
         .btn-opt { flex: 1; padding: 12px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--input-bg); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.75rem; color: var(--text-label); transition: 0.3s; }
-        .btn-opt:active { background: #eee; transform: scale(0.95); }
         .btn-opt i { font-size: 1.2rem; color: var(--asdp-blue); }
 
         .btn { padding: 15px; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; color: white; }
         .btn-save { background: var(--asdp-blue); }
-        .btn-update { background: #28a745; } 
+        .btn-update { background: #28a745; }
         .btn-pdf { background: var(--asdp-orange); }
         .btn-setup { background: var(--input-bg); color: var(--text-main); font-size: 0.7rem; border: 1px dashed var(--border-color); padding: 8px; }
         
@@ -206,7 +164,6 @@
     let db;
     let imgLogo = "", imgTTDUser = "", imgTTDMgr = "", tempFoto = "";
 
-    // FITUR DARK MODE
     function toggleTheme() {
         const currentTheme = document.documentElement.getAttribute("data-theme");
         const newTheme = currentTheme === "dark" ? "light" : "dark";
@@ -217,16 +174,10 @@
 
     function updateThemeIcon(theme) {
         const btn = document.getElementById('theme-btn');
-        if(theme === "dark") {
-            btn.innerHTML = '<i class="fas fa-sun"></i>';
-            btn.style.background = 'var(--asdp-orange)';
-        } else {
-            btn.innerHTML = '<i class="fas fa-moon"></i>';
-            btn.style.background = 'var(--asdp-blue)';
-        }
+        btn.innerHTML = theme === "dark" ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        btn.style.background = theme === "dark" ? 'var(--asdp-orange)' : 'var(--asdp-blue)';
     }
 
-    // Load Theme on Start
     const savedTheme = localStorage.getItem("theme") || "light";
     document.documentElement.setAttribute("data-theme", savedTheme);
     updateThemeIcon(savedTheme);
@@ -291,15 +242,14 @@
     function saveData() {
         const akt = document.getElementById('akt').value;
         const tglVal = document.getElementById('tgl').value;
-        const statusVal = document.getElementById('status').value;
-        const editId = document.getElementById('edit-id').value;
         if(!akt || !tglVal) return alert("Mohon lengkapi Tanggal & Uraian!");
-        const data = { tgl: tglVal, lok: document.getElementById('lok').value, status: statusVal, akt, foto: tempFoto };
+        const data = { tgl: tglVal, lok: document.getElementById('lok').value, status: document.getElementById('status').value, akt, foto: tempFoto };
         let tx = db.transaction("laporan", "readwrite");
         let store = tx.objectStore("laporan");
-        if(editId) { data.id = parseInt(editId); store.put(data); alert("Data Berhasil Diperbarui!"); }
-        else { store.add(data); alert("Data Tersimpan!"); }
-        tx.oncomplete = () => { resetForm(); refreshTable(); };
+        const editId = document.getElementById('edit-id').value;
+        if(editId) { data.id = parseInt(editId); store.put(data); }
+        else { store.add(data); }
+        tx.oncomplete = () => { resetForm(); refreshTable(); alert("Berhasil Disimpan!"); };
     }
 
     function editData(id) {
@@ -311,7 +261,6 @@
             document.getElementById('status').value = d.status;
             document.getElementById('akt').value = d.akt;
             if(d.foto) { tempFoto = d.foto; document.getElementById('preview-img').src = d.foto; document.getElementById('preview-img').style.display = "block"; }
-            else { tempFoto = ""; document.getElementById('preview-img').style.display = "none"; }
             document.getElementById('form-title').innerHTML = '<i class="fas fa-pen-square"></i> Update Laporan';
             document.getElementById('btn-main').innerHTML = '<i class="fas fa-sync-alt"></i> UPDATE DATA';
             document.getElementById('btn-main').className = 'btn btn-update';
@@ -321,21 +270,16 @@
     }
 
     function deleteData(id) {
-        if(confirm("Apakah Anda yakin ingin menghapus laporan ini?")) {
+        if(confirm("Hapus laporan ini?")) {
             let tx = db.transaction("laporan", "readwrite");
             tx.objectStore("laporan").delete(id);
-            tx.oncomplete = () => { refreshTable(); if(document.getElementById('edit-id').value == id) resetForm(); };
+            tx.oncomplete = () => refreshTable();
         }
     }
 
     function clearAllData() {
-        if(confirm("PERINGATAN!\n\nSemua riwayat laporan akan dihapus secara permanen. Lanjutkan?")) {
-            let tx = db.transaction("laporan", "readwrite");
-            tx.objectStore("laporan").clear().onsuccess = () => {
-                alert("Semua riwayat berhasil dibersihkan!");
-                refreshTable();
-                resetForm();
-            };
+        if(confirm("Hapus SEMUA riwayat laporan secara permanen?")) {
+            db.transaction("laporan", "readwrite").objectStore("laporan").clear().onsuccess = () => { refreshTable(); resetForm(); };
         }
     }
 
@@ -354,7 +298,7 @@
     function refreshTable() {
         const table = document.getElementById('historyTable');
         const clearContainer = document.getElementById('clear-container');
-        table.innerHTML = "<tr><td colspan='3' style='color:var(--text-label); padding-bottom:10px; border-bottom: 2px solid var(--border-color);'>Riwayat Laporan Tersimpan:</td></tr>";
+        table.innerHTML = "<tr><td colspan='3' style='color:var(--text-label); padding-bottom:10px; border-bottom: 2px solid var(--border-color);'>Riwayat Laporan:</td></tr>";
         db.transaction("laporan").objectStore("laporan").getAll().onsuccess = e => {
             const res = e.target.result;
             res.sort((a, b) => new Date(b.tgl) - new Date(a.tgl));
@@ -369,12 +313,7 @@
                     </td>
                 </tr>`;
             });
-            if(res.length > 0) {
-                clearContainer.innerHTML = `<button class="btn-clear-all" onclick="clearAllData()"><i class="fas fa-eraser"></i> HAPUS SEMUA RIWAYAT</button>`;
-            } else {
-                table.innerHTML += "<tr><td colspan='3' align='center' style='padding:20px; color:#aaa;'>Belum ada data.</td></tr>";
-                clearContainer.innerHTML = "";
-            }
+            clearContainer.innerHTML = res.length > 0 ? `<button class="btn-clear-all" onclick="clearAllData()"><i class="fas fa-eraser"></i> HAPUS SEMUA RIWAYAT</button>` : "";
         };
     }
 
@@ -385,30 +324,60 @@
             allData.sort((a,b) => new Date(a.tgl) - new Date(b.tgl));
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
+
             if(imgLogo) try { doc.addImage(imgLogo, 'PNG', 14, 10, 40, 15); } catch(err){}
             doc.setFontSize(14); doc.setTextColor(0, 84, 166); doc.setFont(undefined, 'bold');
             doc.text("SHOREBASE DAILY REPORT", 196, 18, {align:'right'});
             doc.line(14, 28, 196, 28);
+            
             doc.autoTable({
                 startY: 33,
                 head: [['No', 'Hari & Tanggal', 'Unit', 'Uraian Pekerjaan', 'Status']],
                 body: allData.map((d, i) => [i+1, formatIndo(d.tgl), d.lok, d.akt, d.status]),
                 headStyles: { fillColor: [0, 84, 166], halign: 'center' },
-                theme: 'grid'
+                theme: 'grid',
+                styles: { fontSize: 8 }
             });
-            if(allData.some(d => d.foto)) {
+
+            let ySign = doc.lastAutoTable.finalY + 15;
+            if(ySign > 230) { doc.addPage(); ySign = 25; }
+            doc.setFontSize(9); doc.setTextColor(0);
+            doc.text("Dibuat Oleh,", 20, ySign);
+            if(imgTTDUser) try { doc.addImage(imgTTDUser, 'PNG', 15, ySign + 2, 35, 15); } catch(err){}
+            doc.text("SYAHRUDI", 20, ySign + 22);
+            doc.text("Diketahui Oleh,", 140, ySign);
+            if(imgTTDMgr) try { doc.addImage(imgTTDMgr, 'PNG', 135, ySign + 2, 35, 15); } catch(err){}
+            doc.text("DEDI SISWANTO", 140, ySign + 22);
+
+            // LAMPIRAN (6 GAMBAR PER LEMBAR)
+            const fotoData = allData.filter(d => d.foto);
+            if(fotoData.length > 0) {
                 doc.addPage();
+                doc.setFontSize(12); doc.setTextColor(0, 84, 166);
                 doc.text("LAMPIRAN DOKUMENTASI", 14, 15);
-                let xP=14, yP=25, c=0;
-                allData.forEach(d => {
-                    if(d.foto) {
-                        if(c>0 && c%4===0) { doc.addPage(); yP=25; }
-                        doc.addImage(d.foto, 'JPEG', xP, yP, 85, 60);
-                        if(xP===14) xP=108; else { xP=14; yP+=78; }
-                        c++;
+                doc.line(14, 17, 196, 17);
+
+                let xPos = [14, 108]; // Kolom
+                let yPos = [25, 108, 191]; // Baris (3 Baris)
+                
+                fotoData.forEach((d, i) => {
+                    const pageIndex = Math.floor(i / 6);
+                    const itemInPage = i % 6;
+                    if (i > 0 && itemInPage === 0) {
+                        doc.addPage();
+                        doc.text("LAMPIRAN DOKUMENTASI (Lanjutan)", 14, 15);
+                        doc.line(14, 17, 196, 17);
                     }
+                    const row = Math.floor(itemInPage / 2);
+                    const col = itemInPage % 2;
+                    try {
+                        doc.addImage(d.foto, 'JPEG', xPos[col], yPos[row], 88, 65);
+                        doc.setFontSize(7); doc.setTextColor(80);
+                        doc.text(`${d.lok} - ${formatIndo(d.tgl)}`, xPos[col], yPos[row] + 70);
+                    } catch(e){}
                 });
             }
+
             doc.save(`Laporan_Shorebase_${Date.now()}.pdf`);
             document.getElementById('loading').style.display = "none";
         };
