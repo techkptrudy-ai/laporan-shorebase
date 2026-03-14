@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASDP Shorebase v18.9 - Pro Edition</title>
+    <title>ASDP Shorebase v19.0 - Table Fix</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -40,12 +40,12 @@
 
 <div id="loading">
     <i class="fas fa-sync fa-spin fa-3x" style="color: var(--asdp-orange);"></i>
-    <p style="margin-top:15px; font-weight: bold; letter-spacing: 1px;">OPTIMASI LAYOUT PDF...</p>
+    <p style="margin-top:15px; font-weight: bold; letter-spacing: 1px;">FINALISASI PDF...</p>
 </div>
 
 <div class="navbar">
     <b style="color:var(--asdp-blue); font-size: 13px;"><i class="fas fa-ship"></i> ASDP SHOREBASE PRO</b>
-    <span style="font-size: 9px; color: #aaa; background: #f0f0f0; padding: 2px 5px; border-radius: 5px;">v18.9</span>
+    <span style="font-size: 9px; color: #aaa; background: #f0f0f0; padding: 2px 5px; border-radius: 5px;">v19.0</span>
 </div>
 
 <div class="container">
@@ -112,7 +112,7 @@
 
     <div class="card">
         <button class="btn btn-pdf" onclick="generateMegaPDF()">
-            <i class="fas fa-file-pdf"></i> CETAK LAPORAN PROFESIONAL
+            <i class="fas fa-file-pdf"></i> CETAK LAPORAN PRO
         </button>
         <table class="recent-table" id="historyTable"></table>
     </div>
@@ -126,7 +126,7 @@
     let db;
     let imgLogo = "", imgTTDUser = "", imgTTDMgr = "", tempFoto = "";
 
-    const request = indexedDB.open("ShorebaseDB_v18_9", 1);
+    const request = indexedDB.open("ShorebaseDB_v19_0", 1);
     request.onupgradeneeded = e => {
         let dbEx = e.target.result;
         dbEx.createObjectStore("laporan", { keyPath: "id", autoIncrement: true });
@@ -187,11 +187,11 @@
         const akt = document.getElementById('akt').value;
         const tglVal = document.getElementById('tgl').value;
         const statusVal = document.getElementById('status').value;
-        if(!akt || !tglVal) return alert("Lengkapi data!");
+        if(!akt || !tglVal) return alert("Mohon lengkapi Tanggal & Uraian!");
         
         const data = { tgl: tglVal, lok: document.getElementById('lok').value, status: statusVal, akt, foto: tempFoto };
         db.transaction("laporan", "readwrite").objectStore("laporan").add(data).onsuccess = () => {
-            alert("Data Disimpan!");
+            alert("Data Tersimpan!");
             document.getElementById('akt').value = "";
             document.getElementById('preview-img').style.display = "none";
             tempFoto = "";
@@ -224,20 +224,21 @@
             doc.text("Doc No: ASDP/SB/REPT/" + new Date().getFullYear(), 196, 23, {align:'right'});
             doc.line(14, 28, 196, 28);
 
-            // TABEL LAYOUT OPTIMIZED
+            // TABEL FIX NO & STATUS
             doc.autoTable({
                 startY: 33,
                 head: [['No', 'Hari & Tanggal', 'Unit', 'Uraian Pekerjaan', 'Status']],
                 body: allData.map((d, i) => [i+1, formatIndo(d.tgl), d.lok, d.akt, d.status]),
-                headStyles: { fillColor: [0, 84, 166], halign: 'center' },
+                headStyles: { fillColor: [0, 84, 166], halign: 'center', valign: 'middle' },
                 columnStyles: {
-                    0: { cellWidth: 7, halign: 'center' }, // KOLOM NO DIPERKECIL & RATA TENGAH
-                    1: { cellWidth: 38 },
-                    2: { cellWidth: 30 },
-                    3: { cellWidth: 'auto' }, // URAIAN PALING LEBAR
-                    4: { cellWidth: 20, halign: 'center' } // STATUS DI PALING KANAN
+                    0: { cellWidth: 10, halign: 'center', valign: 'middle' }, // LEBAR DITAMBAH KE 10MM & TENGAH
+                    1: { cellWidth: 38, valign: 'middle' },
+                    2: { cellWidth: 30, valign: 'middle' },
+                    3: { cellWidth: 'auto', valign: 'middle' },
+                    4: { cellWidth: 22, halign: 'center', valign: 'middle' }
                 },
-                styles: { fontSize: 7.5, overflow: 'linebreak', cellPadding: 2.5 }
+                styles: { fontSize: 7.5, overflow: 'linebreak', cellPadding: 3 },
+                theme: 'grid'
             });
 
             // SIGNATURE
