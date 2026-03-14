@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASDP Shorebase v15 - Auto Periode</title>
+    <title>ASDP Shorebase v18.9 - Pro Edition</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -11,266 +11,278 @@
     
     <style>
         :root { --asdp-blue: #0054a6; --asdp-orange: #f26522; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f9; color: #333; }
-        .navbar { background: white; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid var(--asdp-blue); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .navbar img { height: 35px; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f4f8; }
+        .navbar { background: white; padding: 10px 20px; border-bottom: 4px solid var(--asdp-blue); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .container { padding: 15px; max-width: 600px; margin: auto; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h2 { margin-top: 0; color: var(--asdp-blue); font-size: 1.1rem; border-left: 4px solid var(--asdp-orange); padding-left: 10px; }
-        label { display: block; margin-top: 12px; font-weight: bold; font-size: 0.8rem; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h2 { margin-top: 0; color: var(--asdp-blue); font-size: 1rem; border-left: 4px solid var(--asdp-orange); padding-left: 10px; text-transform: uppercase; }
+        label { display: block; margin-top: 12px; font-weight: bold; font-size: 0.75rem; color: #666; }
         input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 10px; font-size: 15px; box-sizing: border-box; }
         
-        #loading { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; text-align: center; }
-        
-        .btn { padding: 15px; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; }
-        .btn-save { background: var(--asdp-blue); color: white; }
-        .btn-update { background: #27ae60; color: white; display: none; }
-        .btn-pdf { background: var(--asdp-orange); color: white; }
-        .btn-wa { background: #25d366; color: white; }
-        
-        #preview-container { margin-top: 10px; display: none; text-align: center; }
-        #preview-img { width: 100%; max-width: 200px; border-radius: 10px; border: 2px solid #ddd; }
+        .photo-options { display: flex; gap: 10px; margin-top: 8px; }
+        .btn-opt { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 10px; background: #fafafa; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.75rem; color: #555; transition: 0.3s; }
+        .btn-opt:active { background: #eee; transform: scale(0.95); }
+        .btn-opt i { font-size: 1.2rem; color: var(--asdp-blue); }
 
-        .recent-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.75rem; }
-        .recent-table td { padding: 12px 8px; border-bottom: 1px solid #eee; }
-        .status-pill { padding: 3px 6px; border-radius: 4px; color: white; font-size: 9px; font-weight: bold; text-transform: uppercase; }
-        .selesai { background: #28a745; } .lanjut { background: #fd7e14; } .pending { background: #dc3545; }
+        .btn { padding: 15px; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; color: white; }
+        .btn-save { background: var(--asdp-blue); }
+        .btn-pdf { background: var(--asdp-orange); }
+        .btn-setup { background: #f8f8f8; color: #333; font-size: 0.7rem; border: 1px dashed #bbb; padding: 8px; }
         
-        .action-icons { display: flex; gap: 15px; justify-content: flex-end; align-items: center; }
-        .fa-edit { color: var(--asdp-blue); cursor: pointer; font-size: 1.1rem; }
-        .fa-trash-alt { color: #dc3545; cursor: pointer; font-size: 1.1rem; }
-        .footer { text-align: center; color: #bbb; font-size: 10px; margin: 20px 0; }
+        #preview-img { width: 100%; max-width: 180px; border-radius: 10px; margin-top: 15px; display: none; border: 2px solid #eee; }
+        .preview-setup { height: 45px; object-fit: contain; margin-top: 5px; display: none; border: 1px solid #eee; background: white; padding: 2px; }
+        
+        .recent-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.75rem; }
+        #loading { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; color: white; }
     </style>
 </head>
 <body>
 
-<div id="loading"><i class="fas fa-sync fa-spin fa-3x" style="color: var(--asdp-blue);"></i><p>Menghitung Periode & Membuat PDF...</p></div>
+<div id="loading">
+    <i class="fas fa-sync fa-spin fa-3x" style="color: var(--asdp-orange);"></i>
+    <p style="margin-top:15px; font-weight: bold; letter-spacing: 1px;">OPTIMASI LAYOUT PDF...</p>
+</div>
 
 <div class="navbar">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/ASDP_Indonesia_Ferry_logo.svg/512px-ASDP_Indonesia_Ferry_logo.svg.png">
-    <b style="color:var(--asdp-blue); font-size: 14px;">Shorebase v15</b>
+    <b style="color:var(--asdp-blue); font-size: 13px;"><i class="fas fa-ship"></i> ASDP SHOREBASE PRO</b>
+    <span style="font-size: 9px; color: #aaa; background: #f0f0f0; padding: 2px 5px; border-radius: 5px;">v18.9</span>
 </div>
 
 <div class="container">
     <div class="card">
-        <h2 id="formTitle"><i class="fas fa-edit"></i> Input Laporan</h2>
+        <h2><i class="fas fa-edit"></i> Form Pekerjaan</h2>
+        <label>Hari & Tanggal</label>
         <input type="date" id="tgl">
+        
+        <label>Unit / Kapal</label>
         <select id="lok">
             <option>KMP.Batumandi</option><option>KMP.Sebuku</option><option>KMP.Legundi</option>
             <option>KMP.Jatra 3</option><option>KMP.Portlink</option><option>KMP.Portlink 3</option>
             <option>KMP.Portlink 5</option><option>Workshop</option><option>Dinas Luar</option>
         </select>
-        <select id="stat">
-            <option value="Selesai">Selesai</option><option value="Lanjut">Lanjut</option><option value="Pending">Pending</option>
+
+        <label>Status Pekerjaan</label>
+        <select id="status">
+            <option value="Selesai">Selesai</option>
+            <option value="Pending">Pending</option>
+            <option value="Lanjut">Lanjut</option>
         </select>
-        <textarea id="akt" rows="3" placeholder="Rincian perbaikan teknis..."></textarea>
         
-        <label>Lampiran Foto</label>
-        <input type="file" id="foto" accept="image/*" onchange="compressImage(this)">
-        <div id="preview-container">
-            <img id="preview-img">
-            <p style="font-size: 10px; color: green;">✓ Foto Siap</p>
+        <label>Uraian Pekerjaan (Detail)</label>
+        <textarea id="akt" rows="4" placeholder="Detail teknis pekerjaan..."></textarea>
+        
+        <label>Dokumentasi Foto</label>
+        <div class="photo-options">
+            <div class="btn-opt" onclick="document.getElementById('cam').click()">
+                <i class="fas fa-camera"></i><span>Ambil Foto</span>
+            </div>
+            <div class="btn-opt" onclick="document.getElementById('gal').click()">
+                <i class="fas fa-images"></i><span>Buka Galeri</span>
+            </div>
         </div>
+        <input type="file" id="cam" accept="image/*" capture="camera" style="display:none" onchange="processFile(this, 'foto')">
+        <input type="file" id="gal" accept="image/*" style="display:none" onchange="processFile(this, 'foto')">
         
-        <button id="btnSave" class="btn btn-save" onclick="saveData()"><i class="fas fa-save"></i> SIMPAN BARU</button>
-        <button id="btnUpdate" class="btn btn-update" onclick="updateData()"><i class="fas fa-check"></i> SIMPAN EDIT</button>
+        <center><img id="preview-img"></center>
+        
+        <button class="btn btn-save" onclick="saveData()">
+            <i class="fas fa-save"></i> SIMPAN DATA
+        </button>
+    </div>
+
+    <div class="card" style="background: #fffcf5; border: 1px solid #ffeeba;">
+        <h2><i class="fas fa-user-cog"></i> Setup Atribut</h2>
+        <label>Logo ASDP</label>
+        <input type="file" accept="image/*" onchange="processFile(this, 'logo_site')" class="btn-setup">
+        <center><img id="p-logo" class="preview-setup"></center>
+
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <div style="flex: 1;">
+                <label>TTD Syahrudi</label>
+                <input type="file" accept="image/*" onchange="processFile(this, 'ttd_user')" class="btn-setup">
+                <center><img id="p-ttd-user" class="preview-setup"></center>
+            </div>
+            <div style="flex: 1;">
+                <label>TTD Manager</label>
+                <input type="file" accept="image/*" onchange="processFile(this, 'ttd_mgr')" class="btn-setup">
+                <center><img id="p-ttd-mgr" class="preview-setup"></center>
+            </div>
+        </div>
     </div>
 
     <div class="card">
-        <h2><i class="fas fa-file-export"></i> Laporan Bulanan</h2>
-        <button class="btn btn-pdf" onclick="exportPDF()"><i class="fas fa-file-pdf"></i> DOWNLOAD PDF</button>
-        <button class="btn btn-wa" onclick="kirimWA()"><i class="fab fa-whatsapp"></i> KIRIM RINGKASAN WA</button>
-    </div>
-
-    <div class="card">
-        <h2><i class="fas fa-history"></i> Riwayat</h2>
+        <button class="btn btn-pdf" onclick="generateMegaPDF()">
+            <i class="fas fa-file-pdf"></i> CETAK LAPORAN PROFESIONAL
+        </button>
         <table class="recent-table" id="historyTable"></table>
-        <p onclick="hapusSemua()" style="color:#ddd; font-size:9px; text-align:center; margin-top:20px; cursor:pointer;">[ Reset Semua Data ]</p>
     </div>
-
-    <div class="footer">Teknisi: Syahrudi | Manager: Dedi Siswanto</div>
+    
+    <div style="text-align: center; color: #bbb; font-size: 10px; margin-bottom: 30px;">
+        &copy; 2026 OBOTECH DIGITAL SYSTEM
+    </div>
 </div>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('asdp_v15_final')) || [];
-    let imgBase64 = "";
-    let editIndex = -1;
+    let db;
+    let imgLogo = "", imgTTDUser = "", imgTTDMgr = "", tempFoto = "";
 
-    document.getElementById('tgl').valueAsDate = new Date();
-    updateTampilan();
+    const request = indexedDB.open("ShorebaseDB_v18_9", 1);
+    request.onupgradeneeded = e => {
+        let dbEx = e.target.result;
+        dbEx.createObjectStore("laporan", { keyPath: "id", autoIncrement: true });
+        dbEx.createObjectStore("settings", { keyPath: "key" });
+    };
+    request.onsuccess = e => {
+        db = e.target.result;
+        loadSettings();
+        refreshTable();
+    };
 
-    function compressImage(input) {
+    function formatIndo(dateStr) {
+        if(!dateStr) return "-";
+        const opsi = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+        return new Date(dateStr).toLocaleDateString('id-ID', opsi);
+    }
+
+    function processFile(input, type) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = e => {
                 const img = new Image();
                 img.src = e.target.result;
-                img.onload = function() {
+                img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    const targetW = 320;
-                    const scale = targetW / img.width;
-                    canvas.width = targetW;
-                    canvas.height = img.height * scale;
+                    canvas.width = (type === 'foto') ? 700 : 400;
+                    canvas.height = img.height * (canvas.width / img.width);
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    imgBase64 = canvas.toDataURL('image/jpeg', 0.5);
-                    document.getElementById('preview-img').src = imgBase64;
-                    document.getElementById('preview-container').style.display = "block";
+                    const base64 = canvas.toDataURL('image/png');
+                    if(type === 'foto') { 
+                        tempFoto = base64; 
+                        document.getElementById('preview-img').src = base64; 
+                        document.getElementById('preview-img').style.display = "block"; 
+                    } else {
+                        db.transaction("settings", "readwrite").objectStore("settings").put({key: type, val: base64});
+                        if(type === 'logo_site') { imgLogo = base64; document.getElementById('p-logo').src = base64; document.getElementById('p-logo').style.display = "block"; }
+                        if(type === 'ttd_user') { imgTTDUser = base64; document.getElementById('p-ttd-user').src = base64; document.getElementById('p-ttd-user').style.display = "block"; }
+                        if(type === 'ttd_mgr') { imgTTDMgr = base64; document.getElementById('p-ttd-mgr').src = base64; document.getElementById('p-ttd-mgr').style.display = "block"; }
+                    }
                 };
             };
             reader.readAsDataURL(input.files[0]);
         }
     }
 
-    function saveData() {
-        if(!document.getElementById('akt').value) return alert("Uraian kosong!");
-        db.push({
-            tgl: document.getElementById('tgl').value,
-            lok: document.getElementById('lok').value,
-            akt: document.getElementById('akt').value,
-            stat: document.getElementById('stat').value,
-            foto: imgBase64
-        });
-        finishAction("Data Tersimpan!");
-    }
-
-    function editData(idx) {
-        editIndex = idx;
-        const item = db[idx];
-        document.getElementById('tgl').value = item.tgl;
-        document.getElementById('lok').value = item.lok;
-        document.getElementById('akt').value = item.akt;
-        document.getElementById('stat').value = item.stat;
-        imgBase64 = item.foto;
-        
-        if(imgBase64) {
-            document.getElementById('preview-img').src = imgBase64;
-            document.getElementById('preview-container').style.display = "block";
-        } else {
-            document.getElementById('preview-container').style.display = "none";
-        }
-
-        document.getElementById('btnSave').style.display = "none";
-        document.getElementById('btnUpdate').style.display = "flex";
-        window.scrollTo({top:0, behavior:'smooth'});
-    }
-
-    function updateData() {
-        db[editIndex] = {
-            tgl: document.getElementById('tgl').value,
-            lok: document.getElementById('lok').value,
-            akt: document.getElementById('akt').value,
-            stat: document.getElementById('stat').value,
-            foto: imgBase64
+    function loadSettings() {
+        db.transaction("settings").objectStore("settings").getAll().onsuccess = e => {
+            e.target.result.forEach(s => {
+                if(s.key === 'logo_site') { imgLogo = s.val; document.getElementById('p-logo').src = s.val; document.getElementById('p-logo').style.display = "block"; }
+                if(s.key === 'ttd_user') { imgTTDUser = s.val; document.getElementById('p-ttd-user').src = s.val; document.getElementById('p-ttd-user').style.display = "block"; }
+                if(s.key === 'ttd_mgr') { imgTTDMgr = s.val; document.getElementById('p-ttd-mgr').src = s.val; document.getElementById('p-ttd-mgr').style.display = "block"; }
+            });
         };
-        finishAction("Perubahan Disimpan!");
     }
 
-    function finishAction(msg) {
-        localStorage.setItem('asdp_v15_final', JSON.stringify(db));
-        alert(msg);
-        location.reload();
+    function saveData() {
+        const akt = document.getElementById('akt').value;
+        const tglVal = document.getElementById('tgl').value;
+        const statusVal = document.getElementById('status').value;
+        if(!akt || !tglVal) return alert("Lengkapi data!");
+        
+        const data = { tgl: tglVal, lok: document.getElementById('lok').value, status: statusVal, akt, foto: tempFoto };
+        db.transaction("laporan", "readwrite").objectStore("laporan").add(data).onsuccess = () => {
+            alert("Data Disimpan!");
+            document.getElementById('akt').value = "";
+            document.getElementById('preview-img').style.display = "none";
+            tempFoto = "";
+            refreshTable();
+        };
     }
 
-    function updateTampilan() {
+    function refreshTable() {
         const table = document.getElementById('historyTable');
         table.innerHTML = "";
-        db.slice().reverse().forEach((d, i) => {
-            const realIdx = db.length - 1 - i;
-            table.innerHTML += `<tr>
-                <td><b>${d.lok}</b><br><small>${d.tgl}</small></td>
-                <td class="action-icons">
-                    <span class="status-pill ${d.stat.toLowerCase()}">${d.stat}</span>
-                    <i class="fas fa-edit" onclick="editData(${realIdx})"></i>
-                    <i class="fas fa-trash-alt" onclick="hapusSatu(${realIdx})"></i>
-                </td>
-            </tr>`;
-        });
+        db.transaction("laporan").objectStore("laporan").getAll().onsuccess = e => {
+            e.target.result.reverse().slice(0, 3).forEach(d => {
+                table.innerHTML += `<tr style='border-bottom:1px solid #eee;'><td style='padding:8px 0;'><b>${d.lok}</b><br><small>${d.tgl}</small></td><td align="right"><b>${d.status}</b></td></tr>`;
+            });
+        };
     }
 
-    async function exportPDF() {
-        if(db.length === 0) return alert("Data kosong.");
+    function generateMegaPDF() {
         document.getElementById('loading').style.display = "flex";
+        db.transaction("laporan").objectStore("laporan").getAll().onsuccess = e => {
+            const allData = e.target.result;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
 
-        setTimeout(() => {
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF('p', 'mm', 'a4');
+            // HEADER
+            if(imgLogo) try { doc.addImage(imgLogo, 'PNG', 14, 10, 40, 15); } catch(err){}
+            doc.setFontSize(14); doc.setTextColor(0, 84, 166); doc.setFont(undefined, 'bold');
+            doc.text("SHOREBASE DAILY REPORT", 196, 18, {align:'right'});
+            doc.setFontSize(8); doc.setTextColor(100); doc.setFont(undefined, 'normal');
+            doc.text("Doc No: ASDP/SB/REPT/" + new Date().getFullYear(), 196, 23, {align:'right'});
+            doc.line(14, 28, 196, 28);
 
-                // LOGIKA DETEKSI BULAN OTOMATIS
-                const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-                let daftarBulan = db.map(d => new Date(d.tgl).getMonth());
-                let daftarTahun = db.map(d => new Date(d.tgl).getFullYear());
-                
-                let minBulan = Math.min(...daftarBulan);
-                let maxBulan = Math.max(...daftarBulan);
-                let tahun = daftarTahun[0];
+            // TABEL LAYOUT OPTIMIZED
+            doc.autoTable({
+                startY: 33,
+                head: [['No', 'Hari & Tanggal', 'Unit', 'Uraian Pekerjaan', 'Status']],
+                body: allData.map((d, i) => [i+1, formatIndo(d.tgl), d.lok, d.akt, d.status]),
+                headStyles: { fillColor: [0, 84, 166], halign: 'center' },
+                columnStyles: {
+                    0: { cellWidth: 7, halign: 'center' }, // KOLOM NO DIPERKECIL & RATA TENGAH
+                    1: { cellWidth: 38 },
+                    2: { cellWidth: 30 },
+                    3: { cellWidth: 'auto' }, // URAIAN PALING LEBAR
+                    4: { cellWidth: 20, halign: 'center' } // STATUS DI PALING KANAN
+                },
+                styles: { fontSize: 7.5, overflow: 'linebreak', cellPadding: 2.5 }
+            });
 
-                let periodeText = "";
-                if (minBulan === maxBulan) {
-                    periodeText = "Periode: " + namaBulan[minBulan] + " " + tahun;
-                } else {
-                    periodeText = "Periode: " + namaBulan[minBulan] + " - " + namaBulan[maxBulan] + " " + tahun;
-                }
+            // SIGNATURE
+            let y = doc.lastAutoTable.finalY + 15;
+            if(y > 230) { doc.addPage(); y = 25; }
+            doc.setFontSize(9); doc.setTextColor(0);
+            doc.text("Dibuat Oleh,", 20, y);
+            if(imgTTDUser) try { doc.addImage(imgTTDUser, 'PNG', 15, y + 2, 35, 15); } catch(err){}
+            doc.setFont(undefined, 'bold'); doc.text("SYAHRUDI", 20, y + 22);
 
-                // HEADER PDF
-                doc.setFontSize(14); doc.setTextColor(0, 84, 166); doc.setFont(undefined, 'bold');
-                doc.text("PT. ASDP INDONESIA FERRY (PERSERO)", 14, 15);
-                
-                doc.setFontSize(10); doc.setTextColor(100);
-                doc.text("SHOREBASE DAILY REPORT", 14, 21);
-                
-                // SUBTITLE PERIODE OTOMATIS
-                doc.setFontSize(9); doc.setTextColor(242, 101, 34); // Warna Orange ASDP
-                doc.text(periodeText.toUpperCase(), 14, 26);
-                
-                doc.setDrawColor(0, 84, 166); doc.line(14, 28, 196, 28);
+            doc.text("Diketahui Oleh,", 140, y);
+            if(imgTTDMgr) try { doc.addImage(imgTTDMgr, 'PNG', 135, y + 2, 35, 15); } catch(err){}
+            doc.setFont(undefined, 'bold'); doc.text("DEDI SISWANTO", 140, y + 22);
 
-                const body = db.map((d, i) => [i + 1, d.tgl, d.lok, d.akt, d.stat, ""]);
-                doc.autoTable({
-                    startY: 32,
-                    head: [['No', 'Tgl', 'Lokasi', 'Uraian Pekerjaan', 'Status', 'Foto']],
-                    body: body,
-                    headStyles: { fillColor: [0, 84, 166] },
-                    styles: { fontSize: 7, valign: 'middle' },
-                    columnStyles: { 5: { cellWidth: 35, minCellHeight: 28 } },
-                    didDrawCell: function(data) {
-                        if (data.column.index === 5 && data.cell.section === 'body') {
-                            const imgData = db[data.row.index].foto;
-                            if (imgData && imgData.length > 500) {
-                                try { doc.addImage(imgData, 'JPEG', data.cell.x + 2, data.cell.y + 2, 31, 24); } catch (e) {}
-                            }
-                        }
+            // FOOTER COPYRIGHT
+            const pages = doc.internal.getNumberOfPages();
+            for(let i = 1; i <= pages; i++) {
+                doc.setPage(i);
+                doc.setFontSize(7); doc.setTextColor(150);
+                doc.text("Copyright © 2026 Obotech Digital System - ASDP Shorebase Mobile Reporting Service", 105, 290, {align: 'center'});
+            }
+
+            // HALAMAN FOTO
+            if(allData.some(d => d.foto)) {
+                doc.addPage();
+                doc.setFontSize(12); doc.setTextColor(0, 84, 166); doc.text("LAMPIRAN DOKUMENTASI", 14, 15);
+                doc.line(14, 17, 196, 17);
+                let xP=14, yP=25, c=0;
+                allData.forEach(d => {
+                    if(d.foto) {
+                        if(c>0 && c%4===0) { doc.addPage(); yP=25; }
+                        doc.addImage(d.foto, 'JPEG', xP, yP, 85, 60);
+                        doc.setFontSize(8); doc.setTextColor(0);
+                        doc.text(`${d.lok} (${d.status}) - ${formatIndo(d.tgl)}`, xP, yP+65);
+                        if(xP===14) xP=108; else { xP=14; yP+=78; }
+                        c++;
                     }
                 });
+            }
 
-                let y = doc.lastAutoTable.finalY + 20;
-                if(y > 250) { doc.addPage(); y = 20; }
-                doc.setFontSize(9); doc.setTextColor(0);
-                doc.setFont(undefined, 'normal');
-                doc.text("Dibuat Oleh,", 30, y);
-                doc.text("Shorebase,", 30, y + 5);
-                doc.setFont(undefined, 'bold'); doc.text("SYAHRUDI", 30, y + 22);
-                doc.setFont(undefined, 'normal');
-                doc.text("Disetujui Oleh,", 140, y);
-                doc.text("Manager Shorebase,", 140, y + 5);
-                doc.setFont(undefined, 'bold'); doc.text("DEDI SISWANTO", 140, y + 22);
-
-                doc.save(`Laporan_Shorebase_${periodeText.replace(': ','_')}.pdf`);
-            } catch (err) { alert("Error: " + err.message); }
-            finally { document.getElementById('loading').style.display = "none"; }
-        }, 500);
+            doc.save(`Laporan_Shorebase_${Date.now()}.pdf`);
+            document.getElementById('loading').style.display = "none";
+        };
     }
-
-    function kirimWA() {
-        if(db.length === 0) return alert("Data kosong.");
-        let pesan = "*LAPORAN SHOREBASE*\n\n";
-        db.forEach((d, i) => { pesan += `${i+1}. *${d.tgl}* - ${d.lok}\n   Ket: ${d.akt}\n   Status: ${d.stat}\n\n`; });
-        window.open("https://wa.me/?text=" + encodeURIComponent(pesan), '_blank');
-    }
-
-    function hapusSatu(idx) { if(confirm("Hapus baris ini?")) { db.splice(idx,1); localStorage.setItem('asdp_v15_final', JSON.stringify(db)); updateTampilan(); } }
-    function hapusSemua() { if(confirm("Hapus seluruh data?")) { localStorage.clear(); location.reload(); } }
+    document.getElementById('tgl').valueAsDate = new Date();
 </script>
 </body>
 </html>
